@@ -7,7 +7,7 @@ import { config } from "dotenv";
   console.log(process.env.TELEGRAM_API_KEY);
   console.log(process.env.TELEGRAM_CHAT_ID);
   
-  const items = [ 'yale doorman', 'oskilloskooppi', 'rasberry pi', 'tärylätkä']
+  const items = [ 'yale doorman', 'oskilloskooppi', 'rasberry pi', 'arduino', 'kaiuittimet' ]
   
   const urls: string[] =  [];
   
