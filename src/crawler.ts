@@ -66,13 +66,18 @@ async function searchItems(items:string): Promise<string[]> {
   }
   await page.locator('input').first().fill(items);
   await page.locator('input').first().press('Enter');
-  await page.waitForSelector('.list_mode_thumb');
+  try {
+    await page.waitForSelector('.list_mode_thumb');
+    
+  } catch (error) {
+    console.log("Error: ", error)
+  }
+  
   console.log('Found items: ',await page.locator('.list_mode_thumb > a').count());
   const urls = await page.$$eval('.list_mode_thumb > a', (elements) => 
-    elements.map((el)=> el.href),
+  elements.map((el)=> el.href),
   )
   await browser.close();
   console.log("done and browser closed")
-  // console.log(urls)
   return urls 
 }
