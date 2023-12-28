@@ -57,13 +57,18 @@ function storeDb(urls:string[]) {
 async function searchItems(items:string): Promise<string[]> {
   console.log("Starting browser");
   let date = Date.now().toString();
-  const browser = await chromium.launch({headless: true});
-  let page = await browser.newPage();
+  const browser = await chromium.launch({headless: false});
+  let page = await browser.newPage(); 
   await page.goto('https://www.tori.fi/');
-  const acceptCookies = await page.$$('button:has-text("Hyväksy kaikki evästeet")')
-  if (acceptCookies) {
-    await page.frameLocator('#sp_message_iframe_433571').locator('button:has-text("Hyväksy kaikki evästeet")').click();
-  }
+  await page.frameLocator('#sp_message_iframe_886669').locator('text=Hyväksy kaikki evästeet').click();
+  // const acceptCookies = await page.$$('button:has-text("Hyväksy kaikki evästeet")')
+  // await page.$$('button:has-text("Hyväksy kaikki evästeet")')
+  // await page.frameLocator('#sp_message_iframe_433571').locator('button:has-text("Hyväksy kaikki evästeet")').click();
+  // if (acceptCookies) {
+    
+  //   console.log(acceptCookies);
+    
+  // }
   await page.locator('input').first().fill(items);
   await page.locator('input').first().press('Enter');
   try {
