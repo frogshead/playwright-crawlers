@@ -4,6 +4,9 @@ import { Database, OPEN_CREATE, OPEN_READWRITE } from "sqlite3";
 export function greet(name:string) {
     console.log("hello " + name +  " there!");
 }
+function sleep(ms: number) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
 
 export function storeDb(urls:string[]) {
     const db = new Database('tori.db',
@@ -27,6 +30,8 @@ export function storeDb(urls:string[]) {
                 const bot= new TelegramBot(process.env.TELEGRAM_API_KEY);
                 
                 bot.sendMessage(process.env.TELEGRAM_CHAT_ID, url);
+                sleep(100);
+                
   
   
               }

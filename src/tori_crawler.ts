@@ -8,7 +8,26 @@ import { storeDb} from './utils';
   // console.log(process.env.TELEGRAM_API_KEY);
   // console.log(process.env.TELEGRAM_CHAT_ID);
   
-  const items = [ 'yale doorman', 'oskilloskooppi', 'rasberry pi', 'arduino', 'genelec', 'kaiuttimet', 'pyörän kattoteline', 'agilent', 'rigol', 'tektronix', 'lecroy', 'sähkökitara' ]
+  const items = [ 
+  'yale doorman',
+  'barcelona sohva',
+  'dremel',
+  'ruuvi gateway',
+  'esp32', 
+  'oskilloskooppi', 
+  'rasberry pi', 
+  'arduino', 
+  'genelec', 
+  'pyörän kattoteline', 
+  'agilent', 
+  'rigol', 
+  'tektronix', 
+  'lecroy', 
+  'sähkökitara',
+  'wlan reititin',
+  'Herman Miller', 
+  'ruuvitag']
+
   
   const urls: string[] =  [];
   
