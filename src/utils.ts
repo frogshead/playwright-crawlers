@@ -9,7 +9,9 @@ function sleep(ms: number) {
 }
 
 export function storeDb(urls:string[]) {
-    const db = new Database('tori.db',
+    // Store database in data directory for persistence in Docker
+    const dbPath = process.env.NODE_ENV === 'production' ? './data/tori.db' : './tori.db';
+    const db = new Database(dbPath,
       OPEN_READWRITE | OPEN_CREATE,
       (err) => {
         if (err){

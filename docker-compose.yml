@@ -1,0 +1,11 @@
+version: '3'
+
+services:
+  crawler:
+    build: .
+    volumes:
+      - ./data:/app/data
+    env_file:
+      - .env
+    # You can override the default command to run a different crawler
+    # command: node build/tavastia_crawler.js
