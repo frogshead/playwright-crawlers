@@ -1,9 +1,5 @@
 import { Database, OPEN_CREATE, OPEN_READWRITE } from "sqlite3";
 
-export function greet(name:string) {
-    console.log("hello " + name +  " there!");
-}
-
 function sleep(ms: number) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }

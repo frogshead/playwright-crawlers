@@ -90,7 +90,4 @@ Tests are located in `src/tests/` using Playwright test framework:
 
 ## TODO:
 
-- Fix telegram notification implementation to respect rate limits and avoid being blocked. We should not see anymore "Unhandled rejection Error: ETELEGRAM: 429 Too Many Requests: retry after 4" errors.
-- Add unit tests for utility functions
-- Optimize database queries
 - Improve logging and monitoring
