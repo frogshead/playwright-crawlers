@@ -89,8 +89,7 @@ Tests are located in `src/tests/` using Playwright test framework:
 - Includes Chromium browser installation for Playwright
 
 ## TODO:
-- Update used libraries to latest versions,test compatibility and fix any issues
-- Add mol.fi crawler implementation. Search job openings for "ohjelmistokehittäjä", "developer", "software", "rust", "embedded", "devops", "test automation", use web-researcher agent to do access and parsing the job openings.
+
 - Fix telegram notification implementation to respect rate limits and avoid being blocked. We should not see anymore "Unhandled rejection Error: ETELEGRAM: 429 Too Many Requests: retry after 4" errors.
 - Add unit tests for utility functions
 - Optimize database queries

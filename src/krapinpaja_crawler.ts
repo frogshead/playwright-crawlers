@@ -14,6 +14,6 @@ const HEADLESS = true;
     // a.tiketti-list-item:nth-child(3)
     const urls = await page.$$eval('.project > a', (elements) => elements.map((el) => el.href));
     // console.log(urls)
-    storeDb(urls);
+    await storeDb(urls);
     await browser.close();
 })();

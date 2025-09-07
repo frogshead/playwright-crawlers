@@ -33,7 +33,7 @@ const HEADLESS = true;
         await page.goto(item);
         const urls = await page.$$eval('.thumbnail > a', (elements) => elements.map((el) => el.href));
         // console.log(urls)
-        storeDb(urls);
+        await storeDb(urls);
         await browser.close();
     }
 })();

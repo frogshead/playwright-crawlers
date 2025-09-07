@@ -40,7 +40,7 @@ const HEADLESS = true;
   }
 
   console.log(urls)
-  storeDb(urls)
+  await storeDb(urls)
 })();
 
 

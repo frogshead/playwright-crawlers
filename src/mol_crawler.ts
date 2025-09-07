@@ -9,15 +9,19 @@ const HEADLESS = true;
   config();
   
   const searchTerms = [ 
-    'ohjelmistokehittäjä',
-    'developer',
-    'software',
-    'rust',
-    'embedded',
-    'devops',
-    'test automation',
-    'testiautomaatio',
-    'devops'
+    // 'ohjelmistokehittäjä',
+    // 'developer',
+    // 'software',
+    // 'rust',
+    // 'embedded',
+    // 'sulautettu',
+    // 'devops',
+    // 'test automation',
+    // 'testiautomaatio',
+    // 'devops',
+    // 'henkilöstöjohtaja',
+    'hr manager',
+    'iot'
 
   ];
 
@@ -34,7 +38,7 @@ const HEADLESS = true;
 
   console.log(`Total job URLs found: ${jobUrls.length}`);
   if (jobUrls.length > 0) {
-    storeDb(jobUrls);
+    await storeDb(jobUrls);
   }
 })();
 
