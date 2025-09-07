@@ -1,0 +1,22 @@
+# Git
+.git
+.gitignore
+
+# Node.js
+node_modules
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+
+# Build directory
+build
+
+# Database files
+*.db
+
+# Environment variables
+.env
+
+# Misc
+.DS_Store
+*.log

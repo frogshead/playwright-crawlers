@@ -1,12 +1,22 @@
 import { chromium } from 'playwright';
 import { config } from "dotenv";
 import { storeDb} from './utils';
+import { createLogger } from './logger';
+import { startCrawlerMonitoring, completeCrawlerMonitoring, recordCrawlerMetrics, recordCrawlerError, monitor } from './monitoring';
 
+// Set to false to run with browser window visible (for debugging)
+const HEADLESS = true;
+const logger = createLogger('tori');
 
 (async () => {
   config();
-  // console.log(process.env.TELEGRAM_API_KEY);
-  // console.log(process.env.TELEGRAM_CHAT_ID);
+  const crawlerName = 'tori';
+  
+  // Start monitoring and system monitoring
+  startCrawlerMonitoring(crawlerName);
+  const systemMonitorInterval = monitor.startSystemMonitoring();
+  
+  logger.crawlerStart();
   
   const items = [ 
   'yale doorman',
@@ -33,37 +43,81 @@ import { storeDb} from './utils';
   
   for await (const item of items) {
     const i = await searchItems(item);
-    console.log(i);
+    logger.searchComplete(item, i.length);
+    recordCrawlerMetrics(crawlerName, item, i.length);
     urls.push(...i)
   }
 
-  console.log(urls)
-  storeDb(urls)
+  logger.crawlerComplete(urls.length, items.length);
+  await storeDb(urls);
+  
+  // Complete monitoring
+  completeCrawlerMonitoring(crawlerName);
+  clearInterval(systemMonitorInterval);
 })();
 
 
 
 async function searchItems(items:string): Promise<string[]> {
-  console.log("Starting browser");
-  let date = Date.now().toString();
-  const browser = await chromium.launch({headless: true});
+  logger.browserOperation('launch', { headless: HEADLESS });
+  const browser = await chromium.launch({headless: HEADLESS});
   let page = await browser.newPage(); 
-  await page.goto('https://www.tori.fi/');
-  await page.frameLocator('#sp_message_iframe_886669').locator('text=Hyväksy kaikki evästeet').click();
-  await page.locator('input').first().fill(items);
-  await page.locator('input').first().press('Enter');
+  
   try {
-    await page.waitForSelector('.list_mode_thumb');
+    // Navigate directly to search results URL with shorter timeout
+    const searchUrl = `https://www.tori.fi/koko_suomi?q=${encodeURIComponent(items)}`;
+    logger.searchStart(items);
+    await page.goto(searchUrl, { timeout: 15000 });
+    
+    // Handle cookie consent simply
+    try {
+      await page.click('text=Hyväksy', { timeout: 3000 });
+      await page.waitForTimeout(1000);
+    } catch (error) {
+      // Try alternative cookie consent approaches
+      try {
+        await page.click('text=Hyväksy kaikki evästeet', { timeout: 2000 });
+      } catch (e) {
+        logger.debug("Cookie consent handled or not needed");
+      }
+    }
+    
+    // Wait for content to load
+    await page.waitForTimeout(5000);
+    
+    // Extract all links that look like tori listings - try multiple patterns
+    let urls: string[] = [];
+    
+    try {
+      urls = await page.$$eval('a[href*="/vi/"]', (elements) => 
+        elements.map((el) => el.href)
+          .filter((href) => href && href.includes('tori.fi/vi/'))
+          .slice(0, 10) // Limit to first 10 results
+      );
+    } catch (error) {
+      logger.debug("No /vi/ links found, trying alternative patterns");
+      
+      // Try other link patterns
+      try {
+        urls = await page.$$eval('a[href*="tori.fi"]', (elements) => 
+          elements.map((el) => el.href)
+            .filter((href) => href && href.includes('tori.fi') && href.includes('/'))
+            .slice(0, 10)
+        );
+      } catch (e) {
+        logger.warn("No tori.fi links found using any pattern");
+      }
+    }
+    
+    logger.debug(`Found URLs for search term`, { searchTerm: items, count: urls.length });
+    await browser.close();
+    logger.browserOperation('close');
+    return urls;
     
   } catch (error) {
-    console.log("Error: ", error)
+    logger.error(`Error processing search term`, { searchTerm: items, error: error instanceof Error ? error.message : error });
+    recordCrawlerError('tori', error instanceof Error ? error.message : String(error));
+    await browser.close();
+    return [];
   }
-  
-  console.log('Found items: ',await page.locator('.list_mode_thumb > a').count());
-  const urls = await page.$$eval('.list_mode_thumb > a', (elements) => 
-  elements.map((el)=> el.href),
-  )
-  await browser.close();
-  console.log("done and browser closed")
-  return urls 
 }
