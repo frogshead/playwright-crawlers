@@ -25,6 +25,7 @@ export function storeDb(urls:string[]) {
             stmt.run(url, (err) => {
               if (err){
                 console.log(err.message)
+                console.log("Url already in database: ", url);
               }
               else{
                 console.log("Added url: ", url);

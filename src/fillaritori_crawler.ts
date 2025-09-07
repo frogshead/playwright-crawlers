@@ -2,6 +2,8 @@ import { chromium, Page, selectors, Selectors } from 'playwright';
 import { config } from "dotenv";
 import { storeDb} from './utils';
 
+// Set to false to run with browser window visible (for debugging)
+const HEADLESS = true;
 
 (async () => {
   config();
@@ -31,7 +33,7 @@ import { storeDb} from './utils';
 async function searchItems(url:string): Promise<string[]> {
   console.log("Starting browser");
   let date = Date.now().toString();
-  const browser = await chromium.launch({headless: true});
+  const browser = await chromium.launch({headless: HEADLESS});
   let page = await browser.newPage(); 
   await page.goto(url);
   await page.locator('button:has-text("HYVÄKSY")').click();

@@ -17,6 +17,7 @@ RUN npx playwright install --with-deps chromium
 
 # Build TypeScript code
 RUN npm install -g typescript
+RUN npm install --save-dev @types/jest
 RUN tsc
 
 # Create a volume for persistent data
