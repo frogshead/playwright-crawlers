@@ -1,4 +1,5 @@
 import { Database, OPEN_CREATE, OPEN_READWRITE } from "sqlite3";
+import { logger } from "./logger";
 
 function sleep(ms: number) {
   return new Promise(resolve => setTimeout(resolve, ms));
@@ -18,24 +19,24 @@ class TelegramNotifier {
       try {
         const TelegramBot = require('node-telegram-bot-api');
         this.bot = new TelegramBot(process.env.TELEGRAM_API_KEY);
-        console.log("Telegram bot initialized successfully");
+        logger.info("Telegram bot initialized successfully");
       } catch (error) {
-        console.error("Failed to initialize Telegram bot:", error);
+        logger.error("Failed to initialize Telegram bot", { error: error instanceof Error ? error.message : String(error) });
         this.bot = null;
       }
     } else {
-      console.log("TELEGRAM_API_KEY not found in environment variables");
+      logger.warn("TELEGRAM_API_KEY not found in environment variables");
     }
   }
 
   public async sendMessage(message: string): Promise<void> {
     if (!this.bot) {
-      console.log("Telegram bot not configured, skipping notification:", message);
+      logger.debug("Telegram bot not configured, skipping notification", { message });
       
       return;
     }
     if (!process.env.TELEGRAM_CHAT_ID) {
-      console.log("Telegram chat ID not configured, skipping notification:", message);
+      logger.debug("Telegram chat ID not configured, skipping notification", { message });
       return;
     }
 
@@ -66,7 +67,7 @@ class TelegramNotifier {
         this.isProcessing = false;
       }
     } catch (error) {
-      console.error("Failed to send Telegram message after retries:", message, error);
+      logger.error("Failed to send Telegram message after retries", { message, error: error instanceof Error ? error.message : String(error) });
       this.isProcessing = false;
     }
   }
@@ -74,14 +75,14 @@ class TelegramNotifier {
   private async sendWithRetry(message: string, retries: number = 0): Promise<void> {
     try {
       await this.bot.sendMessage(process.env.TELEGRAM_CHAT_ID, message);
-      console.log("Telegram notification sent:", message);
+      logger.info("Telegram notification sent", { message });
     } catch (error: any) {
-      console.error("Telegram API error:", error.message);
+      logger.error("Telegram API error", { error: error.message });
       
       // Handle rate limiting specifically
       if (error.code === 429 || error.message.includes('Too Many Requests')) {
         const retryAfter = error.parameters?.retry_after || (this.RETRY_DELAY / 1000);
-        console.log(`Rate limited, waiting ${retryAfter} seconds before retry...`);
+        logger.warn("Rate limited, waiting before retry", { retryAfter, attempt: retries + 1 });
         
         if (retries < this.MAX_RETRIES) {
           await sleep(retryAfter * 1000);
@@ -93,7 +94,7 @@ class TelegramNotifier {
       
       // Handle other errors
       if (retries < this.MAX_RETRIES) {
-        console.log(`Retrying message send (attempt ${retries + 1}/${this.MAX_RETRIES})`);
+        logger.warn("Retrying message send", { attempt: retries + 1, maxRetries: this.MAX_RETRIES });
         await sleep(1000);
         return this.sendWithRetry(message, retries + 1);
       } else {
@@ -121,15 +122,15 @@ export async function storeDb(urls: string[]): Promise<void> {
       OPEN_READWRITE | OPEN_CREATE,
       (err) => {
         if (err) {
-          console.log("Database connection error:", err.message);
+          logger.error("Database connection error", { error: err.message });
           reject(err);
           return;
         }
 
-        console.log("Connected to Database");
+        logger.info("Connected to Database");
         db.run("CREATE TABLE IF NOT EXISTS links (url TEXT UNIQUE)", (err) => {
           if (err) {
-            console.error("Error creating table:", err.message);
+            logger.error("Error creating table", { error: err.message });
             reject(err);
             return;
           }
@@ -139,7 +140,7 @@ export async function storeDb(urls: string[]): Promise<void> {
           const totalCount = urls.length;
 
           if (totalCount === 0) {
-            console.log("No URLs to process");
+            logger.info("No URLs to process");
             resolve();
             return;
           }
@@ -149,16 +150,16 @@ export async function storeDb(urls: string[]): Promise<void> {
               processedCount++;
               
               if (err) {
-                console.log("Database error:", err.message);
-                console.log("URL already in database:", url);
+                logger.debug("Database error (likely duplicate)", { error: err.message });
+                logger.debug("URL already in database", { url });
               } else {
-                console.log("Added new URL to database:", url);
+                logger.info("Added new URL to database", { url });
                 
                 // Send notification for new URLs only using rate-limited system
                 try {
                   await getTelegramNotifier().sendMessage(url);
                 } catch (telegramError) {
-                  console.error("Failed to send Telegram notification for:", url, telegramError);
+                  logger.error("Failed to send Telegram notification", { url, error: telegramError instanceof Error ? telegramError.message : String(telegramError) });
                 }
               }
 
@@ -166,13 +167,13 @@ export async function storeDb(urls: string[]): Promise<void> {
               if (processedCount === totalCount) {
                 stmt.finalize((finalizeErr) => {
                   if (finalizeErr) {
-                    console.error("Error finalizing statement:", finalizeErr.message);
+                    logger.error("Error finalizing statement", { error: finalizeErr.message });
                     reject(finalizeErr);
                   } else {
-                    console.log(`Database operations completed. Processed ${totalCount} URLs.`);
+                    logger.info("Database operations completed", { processedCount: totalCount });
                     db.close((closeErr) => {
                       if (closeErr) {
-                        console.error("Error closing database:", closeErr.message);
+                        logger.error("Error closing database", { error: closeErr.message });
                         reject(closeErr);
                       } else {
                         resolve();

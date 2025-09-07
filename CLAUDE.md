@@ -64,14 +64,17 @@ Required environment variables in `.env`:
 - `TELEGRAM_API_KEY`: Bot token for Telegram notifications
 - `TELEGRAM_CHAT_ID`: Target chat for notifications
 - `NODE_ENV`: Set to 'production' in Docker to use `/app/data/` path for database
+- `LOG_LEVEL`: Optional, sets logging level (ERROR, WARN, INFO, DEBUG). Defaults to INFO
 
 ## Key Implementation Details
 
 - **Database Path**: Changes based on NODE_ENV (local: `./tori.db`, production: `./data/tori.db`)
 - **Crawler Pattern**: Each crawler implements search logic for predefined items arrays
 - **Headless Browsing**: Playwright runs in headless mode for production use
-- **Error Handling**: Basic error handling for database operations and missing search results
+- **Error Handling**: Comprehensive error handling for database operations and missing search results
 - **Rate Limiting**: Built-in delays between operations to avoid overwhelming target sites
+- **Logging**: Structured logging with timestamps, log levels (ERROR, WARN, INFO, DEBUG), and JSON data
+- **Monitoring**: Real-time performance monitoring with metrics, health checks, and system resource tracking
 
 ## Testing
 
@@ -88,6 +91,31 @@ Tests are located in `src/tests/` using Playwright test framework:
 - Default command runs `tori_crawler.js`
 - Includes Chromium browser installation for Playwright
 
+## Logging and Monitoring
+
+The project includes comprehensive logging and monitoring features:
+
+### Logging Features
+- **Structured Logging**: JSON-formatted logs with timestamps, log levels, and contextual data
+- **Log Levels**: ERROR, WARN, INFO, DEBUG (configurable via LOG_LEVEL environment variable)
+- **Crawler-specific Loggers**: Each crawler has its own named logger for better traceability
+- **Consistent Log Format**: `[timestamp] [level] [crawler] message {data}`
+
+### Monitoring Features
+- **Real-time Metrics**: Track crawler performance, URLs found, processing time, and error rates
+- **System Monitoring**: Memory usage, uptime, and system health checks
+- **Health Status**: Automatic health assessment with warning thresholds
+- **Performance Tracking**: Duration, success rates, and resource utilization per crawler run
+
+### Usage Examples
+```bash
+# Set log level to DEBUG for verbose output
+LOG_LEVEL=DEBUG npm start
+
+# Set log level to ERROR for minimal output  
+LOG_LEVEL=ERROR npm run start:mol
+```
+
 ## TODO:
 
-- Improve logging and monitoring
+All major TODO items have been completed!

@@ -1,14 +1,22 @@
 import { chromium } from 'playwright';
 import { config } from "dotenv";
 import { storeDb} from './utils';
+import { createLogger } from './logger';
+import { startCrawlerMonitoring, completeCrawlerMonitoring, recordCrawlerMetrics, recordCrawlerError, monitor } from './monitoring';
 
 // Set to false to run with browser window visible (for debugging)
 const HEADLESS = true;
+const logger = createLogger('tori');
 
 (async () => {
   config();
-  // console.log(process.env.TELEGRAM_API_KEY);
-  // console.log(process.env.TELEGRAM_CHAT_ID);
+  const crawlerName = 'tori';
+  
+  // Start monitoring and system monitoring
+  startCrawlerMonitoring(crawlerName);
+  const systemMonitorInterval = monitor.startSystemMonitoring();
+  
+  logger.crawlerStart();
   
   const items = [ 
   'yale doorman',
@@ -35,25 +43,30 @@ const HEADLESS = true;
   
   for await (const item of items) {
     const i = await searchItems(item);
-    console.log(i);
+    logger.searchComplete(item, i.length);
+    recordCrawlerMetrics(crawlerName, item, i.length);
     urls.push(...i)
   }
 
-  console.log(urls)
-  await storeDb(urls)
+  logger.crawlerComplete(urls.length, items.length);
+  await storeDb(urls);
+  
+  // Complete monitoring
+  completeCrawlerMonitoring(crawlerName);
+  clearInterval(systemMonitorInterval);
 })();
 
 
 
 async function searchItems(items:string): Promise<string[]> {
-  console.log("Starting browser");
+  logger.browserOperation('launch', { headless: HEADLESS });
   const browser = await chromium.launch({headless: HEADLESS});
   let page = await browser.newPage(); 
   
   try {
     // Navigate directly to search results URL with shorter timeout
     const searchUrl = `https://www.tori.fi/koko_suomi?q=${encodeURIComponent(items)}`;
-    console.log(`Searching for: ${items}`);
+    logger.searchStart(items);
     await page.goto(searchUrl, { timeout: 15000 });
     
     // Handle cookie consent simply
@@ -65,7 +78,7 @@ async function searchItems(items:string): Promise<string[]> {
       try {
         await page.click('text=Hyväksy kaikki evästeet', { timeout: 2000 });
       } catch (e) {
-        console.log("Cookie consent handled or not needed");
+        logger.debug("Cookie consent handled or not needed");
       }
     }
     
@@ -82,7 +95,7 @@ async function searchItems(items:string): Promise<string[]> {
           .slice(0, 10) // Limit to first 10 results
       );
     } catch (error) {
-      console.log("No /vi/ links found, trying alternative patterns...");
+      logger.debug("No /vi/ links found, trying alternative patterns");
       
       // Try other link patterns
       try {
@@ -92,17 +105,18 @@ async function searchItems(items:string): Promise<string[]> {
             .slice(0, 10)
         );
       } catch (e) {
-        console.log("No tori.fi links found");
+        logger.warn("No tori.fi links found using any pattern");
       }
     }
     
-    console.log(`Found ${urls.length} URLs for ${items}`);
+    logger.debug(`Found URLs for search term`, { searchTerm: items, count: urls.length });
     await browser.close();
-    console.log("done and browser closed");
+    logger.browserOperation('close');
     return urls;
     
   } catch (error) {
-    console.log(`Error processing ${items}:`, error instanceof Error ? error.message : error);
+    logger.error(`Error processing search term`, { searchTerm: items, error: error instanceof Error ? error.message : error });
+    recordCrawlerError('tori', error instanceof Error ? error.message : String(error));
     await browser.close();
     return [];
   }
