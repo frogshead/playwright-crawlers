@@ -9,18 +9,16 @@ const HEADLESS = true;
   config();
   
   const searchTerms = [ 
-    // 'ohjelmistokehittäjä',
-    // 'developer',
-    // 'software',
-    // 'rust',
-    // 'embedded',
-    // 'sulautettu',
-    // 'devops',
-    // 'test automation',
-    // 'testiautomaatio',
-    // 'devops',
-    // 'henkilöstöjohtaja',
-    'hr manager',
+    'ohjelmistokehittäjä',
+    'developer',
+    'software',
+    'rust',
+    'embedded',
+    'sulautettu',
+    'devops',
+    'test automation',
+    'testiautomaatio',
+    'devops',
     'iot'
 
   ];
