@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/playwright:v1.23.1-focal
+FROM mcr.microsoft.com/playwright:v1.55.0-jammy
 
 # Set working directory
 WORKDIR /app

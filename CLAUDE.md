@@ -86,7 +86,7 @@ Tests are located in `src/tests/` using Playwright test framework:
 
 ## Docker Configuration
 
-- Base image: `mcr.microsoft.com/playwright:v1.23.1-focal`
+- Base image: `mcr.microsoft.com/playwright:v1.55.0-jammy`
 - Volume mount: `/app/data` for persistent database storage
 - Default command runs `tori_crawler.js`
 - Includes Chromium browser installation for Playwright
