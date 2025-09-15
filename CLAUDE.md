@@ -118,4 +118,18 @@ LOG_LEVEL=ERROR npm run start:mol
 
 ## TODO:
 
-All major TODO items have been completed!
+All major TODO items have been completed! ✅
+
+### Completed Items:
+- ✅ Update used libraries to latest versions, test compatibility and fix any issues
+- ✅ Add mol.fi crawler implementation for software development job openings  
+- ✅ Fix telegram notification implementation to respect rate limits and avoid being blocked
+- ✅ Add unit tests for utility functions
+- ✅ ~~Optimize database queries~~ (reverted to simple implementation per user feedback)
+- ✅ Improve logging and monitoring
+
+### Additional Improvements Completed:
+- ✅ Fixed Docker compatibility issues (Node.js 18+ requirement)
+- ✅ Enhanced error handling across all modules
+- ✅ Added comprehensive documentation and examples
+- ✅ Created detailed pull request with all changes
