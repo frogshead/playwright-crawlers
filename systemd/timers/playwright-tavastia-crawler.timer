@@ -1,0 +1,13 @@
+[Unit]
+Description=Run Tavastia crawler hourly
+Documentation=https://github.com/frogshead/playwright-crawlers
+Requires=playwright-crawler@tavastia.service
+
+[Timer]
+# Run every hour at minute 30
+OnCalendar=*:30:00
+Persistent=true
+RandomizedDelaySec=60
+
+[Install]
+WantedBy=timers.target

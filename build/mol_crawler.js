@@ -8,15 +8,19 @@ const HEADLESS = true;
 (async () => {
     (0, dotenv_1.config)();
     const searchTerms = [
-        'ohjelmistokehittäjä',
-        'developer',
-        'software',
-        'rust',
-        'embedded',
-        'devops',
-        'test automation',
-        'testiautomaatio',
-        'devops'
+        // 'ohjelmistokehittäjä',
+        // 'developer',
+        // 'software',
+        // 'rust',
+        // 'embedded',
+        // 'sulautettu',
+        // 'devops',
+        // 'test automation',
+        // 'testiautomaatio',
+        // 'devops',
+        // 'henkilöstöjohtaja',
+        'hr manager',
+        'iot'
     ];
     const jobUrls = [];
     for await (const term of searchTerms) {
@@ -28,7 +32,7 @@ const HEADLESS = true;
     }
     console.log(`Total job URLs found: ${jobUrls.length}`);
     if (jobUrls.length > 0) {
-        (0, utils_1.storeDb)(jobUrls);
+        await (0, utils_1.storeDb)(jobUrls);
     }
 })();
 async function searchJobs(searchTerm) {
@@ -52,44 +56,25 @@ async function searchJobs(searchTerm) {
         }
         // Wait for search results to load
         await page.waitForTimeout(8000);
-        // Debug: Check if SwitchableLayoutSearchResultsList exists
-        const searchResultsContainer = await page.$('.SwitchableLayoutSearchResultsList');
-        if (searchResultsContainer) {
+        // Debug: Check for search results containers
+        const tmtSearchResults = await page.$('.tmt-haku-search-results-list');
+        const switchableResults = await page.$('.SwitchableLayoutSearchResultsList');
+        if (tmtSearchResults) {
+            console.log('Found tmt-haku-search-results-list container');
+        }
+        else if (switchableResults) {
             console.log('Found SwitchableLayoutSearchResultsList container');
         }
         else {
-            console.log('SwitchableLayoutSearchResultsList not found, checking for alternative containers');
+            console.log('Neither search results container found, trying alternative selectors');
         }
         // Extract job listing URLs from the search results page
         let jobUrls = [];
         try {
             // Try different selectors to find job listing links
             const linkSelectors = [
-                // Primary: Target the specific search results list class with variations
-                '.SwitchableLayoutSearchResultsList a[href]',
-                '.SwitchableLayoutSearchResultsList li a[href]',
-                '.SwitchableLayoutSearchResultsList [role="listitem"] a[href]',
-                '.SwitchableLayoutSearchResultsList div a[href]',
-                '.SwitchableLayoutSearchResultsList article a[href]',
-                // Try with different case variations or prefixes
-                '[class*="SwitchableLayoutSearchResultsList"] a[href]',
-                '[class*="SearchResultsList"] a[href]',
-                '[class*="switchable"] [class*="results"] a[href]',
-                // Secondary: Common job listing link patterns
-                'a[href*="/tyopaikka/"]',
-                'a[href*="/job/"]',
-                'a[href*="/vacancy/"]',
-                'a[href*="/avoin"]',
-                '.job-card a',
-                '.job-item a',
-                '.job-listing a',
-                '.vacancy-item a',
-                '[data-job-id] a',
-                // More generic patterns for job listings
-                'a[href*="tyomarkkinatori.fi"][href*="job"]',
-                'a[href*="tyomarkkinatori.fi"][href*="tyopaikka"]',
-                // Look for result items containing typical job info
-                '.search-result a, .result-item a, .listing-item a'
+                // Primary: Target job links inside h3 elements within the search results
+                '.tmt-haku-search-results-list h3 a',
             ];
             for (const selector of linkSelectors) {
                 try {

@@ -1,0 +1,13 @@
+[Unit]
+Description=Run Krapinpaja crawler hourly
+Documentation=https://github.com/frogshead/playwright-crawlers
+Requires=playwright-crawler@krapinpaja.service
+
+[Timer]
+# Run every hour at minute 40
+OnCalendar=*:40:00
+Persistent=true
+RandomizedDelaySec=60
+
+[Install]
+WantedBy=timers.target
