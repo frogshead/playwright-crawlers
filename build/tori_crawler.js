@@ -3,12 +3,18 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const playwright_1 = require("playwright");
 const dotenv_1 = require("dotenv");
 const utils_1 = require("./utils");
+const logger_1 = require("./logger");
+const monitoring_1 = require("./monitoring");
 // Set to false to run with browser window visible (for debugging)
 const HEADLESS = true;
+const logger = (0, logger_1.createLogger)('tori');
 (async () => {
     (0, dotenv_1.config)();
-    // console.log(process.env.TELEGRAM_API_KEY);
-    // console.log(process.env.TELEGRAM_CHAT_ID);
+    const crawlerName = 'tori';
+    // Start monitoring and system monitoring
+    (0, monitoring_1.startCrawlerMonitoring)(crawlerName);
+    const systemMonitorInterval = monitoring_1.monitor.startSystemMonitoring();
+    logger.crawlerStart();
     const items = [
         'yale doorman',
         'barcelona sohva',
@@ -32,20 +38,24 @@ const HEADLESS = true;
     const urls = [];
     for await (const item of items) {
         const i = await searchItems(item);
-        console.log(i);
+        logger.searchComplete(item, i.length);
+        (0, monitoring_1.recordCrawlerMetrics)(crawlerName, item, i.length);
         urls.push(...i);
     }
-    console.log(urls);
-    (0, utils_1.storeDb)(urls);
+    logger.crawlerComplete(urls.length, items.length);
+    await (0, utils_1.storeDb)(urls);
+    // Complete monitoring
+    (0, monitoring_1.completeCrawlerMonitoring)(crawlerName);
+    clearInterval(systemMonitorInterval);
 })();
 async function searchItems(items) {
-    console.log("Starting browser");
+    logger.browserOperation('launch', { headless: HEADLESS });
     const browser = await playwright_1.chromium.launch({ headless: HEADLESS });
     let page = await browser.newPage();
     try {
         // Navigate directly to search results URL with shorter timeout
         const searchUrl = `https://www.tori.fi/koko_suomi?q=${encodeURIComponent(items)}`;
-        console.log(`Searching for: ${items}`);
+        logger.searchStart(items);
         await page.goto(searchUrl, { timeout: 15000 });
         // Handle cookie consent simply
         try {
@@ -58,7 +68,7 @@ async function searchItems(items) {
                 await page.click('text=Hyväksy kaikki evästeet', { timeout: 2000 });
             }
             catch (e) {
-                console.log("Cookie consent handled or not needed");
+                logger.debug("Cookie consent handled or not needed");
             }
         }
         // Wait for content to load
@@ -72,7 +82,7 @@ async function searchItems(items) {
             );
         }
         catch (error) {
-            console.log("No /vi/ links found, trying alternative patterns...");
+            logger.debug("No /vi/ links found, trying alternative patterns");
             // Try other link patterns
             try {
                 urls = await page.$$eval('a[href*="tori.fi"]', (elements) => elements.map((el) => el.href)
@@ -80,16 +90,17 @@ async function searchItems(items) {
                     .slice(0, 10));
             }
             catch (e) {
-                console.log("No tori.fi links found");
+                logger.warn("No tori.fi links found using any pattern");
             }
         }
-        console.log(`Found ${urls.length} URLs for ${items}`);
+        logger.debug(`Found URLs for search term`, { searchTerm: items, count: urls.length });
         await browser.close();
-        console.log("done and browser closed");
+        logger.browserOperation('close');
         return urls;
     }
     catch (error) {
-        console.log(`Error processing ${items}:`, error instanceof Error ? error.message : error);
+        logger.error(`Error processing search term`, { searchTerm: items, error: error instanceof Error ? error.message : error });
+        (0, monitoring_1.recordCrawlerError)('tori', error instanceof Error ? error.message : String(error));
         await browser.close();
         return [];
     }

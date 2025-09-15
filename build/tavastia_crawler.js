@@ -13,6 +13,6 @@ const HEADLESS = true;
     await page.goto('https://tavastiaklubi.fi/?show_all=1');
     // a.tiketti-list-item:nth-child(3)
     const urls = await page.$$eval('.tiketti-list-item', (elements) => elements.map((el) => el.href));
-    (0, utils_1.storeDb)(urls);
+    await (0, utils_1.storeDb)(urls);
     await browser.close();
 })();

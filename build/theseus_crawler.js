@@ -27,7 +27,7 @@ const HEADLESS = true;
         await page.goto(item);
         const urls = await page.$$eval('.thumbnail > a', (elements) => elements.map((el) => el.href));
         // console.log(urls)
-        (0, utils_1.storeDb)(urls);
+        await (0, utils_1.storeDb)(urls);
         await browser.close();
     }
 })();

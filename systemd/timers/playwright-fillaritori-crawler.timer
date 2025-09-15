@@ -1,0 +1,13 @@
+[Unit]
+Description=Run Fillaritori crawler hourly
+Documentation=https://github.com/frogshead/playwright-crawlers
+Requires=playwright-crawler@fillaritori.service
+
+[Timer]
+# Run every hour at minute 20
+OnCalendar=*:20:00
+Persistent=true
+RandomizedDelaySec=60
+
+[Install]
+WantedBy=timers.target

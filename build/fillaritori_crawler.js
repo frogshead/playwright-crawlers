@@ -21,7 +21,7 @@ const HEADLESS = true;
         urls.push(...i);
     }
     console.log(urls);
-    (0, utils_1.storeDb)(urls);
+    await (0, utils_1.storeDb)(urls);
 })();
 async function searchItems(url) {
     console.log("Starting browser");

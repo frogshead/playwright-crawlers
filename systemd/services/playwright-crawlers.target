@@ -1,0 +1,13 @@
+[Unit]
+Description=Playwright Crawlers Suite
+Documentation=https://github.com/frogshead/playwright-crawlers
+Wants=playwright-tori-crawler.timer
+Wants=playwright-mol-crawler.timer
+Wants=playwright-fillaritori-crawler.timer
+Wants=playwright-tavastia-crawler.timer
+Wants=playwright-krapinpaja-crawler.timer
+Wants=playwright-theseus-crawler.timer
+After=docker.service
+
+[Install]
+WantedBy=multi-user.target
