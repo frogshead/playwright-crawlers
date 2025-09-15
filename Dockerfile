@@ -6,8 +6,8 @@ WORKDIR /app
 # Copy package.json and package-lock.json first for better caching
 COPY package*.json ./
 
-# Install dependencies
-RUN npm ci --only=production
+# Install all dependencies (including dev dependencies needed for TypeScript build)
+RUN npm ci
 
 # Install TypeScript globally for build
 RUN npm install -g typescript
@@ -17,6 +17,9 @@ COPY . .
 
 # Build TypeScript code
 RUN tsc
+
+# Clean up dev dependencies after build to reduce image size
+RUN npm prune --production
 
 # Install Playwright browsers
 RUN npx playwright install --with-deps chromium
