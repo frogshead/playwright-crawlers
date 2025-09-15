@@ -18,11 +18,11 @@ COPY . .
 # Build TypeScript code
 RUN tsc
 
+# Install Playwright browsers (before pruning dependencies)
+RUN npx playwright install --with-deps chromium
+
 # Clean up dev dependencies after build to reduce image size
 RUN npm prune --production
-
-# Install Playwright browsers
-RUN npx playwright install --with-deps chromium
 
 # Copy and make entrypoint script executable
 COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
