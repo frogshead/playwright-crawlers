@@ -5,19 +5,23 @@ import { storeDb} from './utils';
 // Set to false to run with browser window visible (for debugging)
 const HEADLESS = true;
 
+// Parse command line arguments
+const args = process.argv.slice(2);
+const openInBrowser = args.includes('--open');
+
 (async () => {
   config();
   // console.log(process.env.TELEGRAM_API_KEY);
   // console.log(process.env.TELEGRAM_CHAT_ID);
-  
-  const subcategory_urls = [ 
-  'https://www.fillaritori.com/forum/85-maasto/', // sähkö 
+
+  const subcategory_urls = [
+  'https://www.fillaritori.com/forum/85-maasto/', // sähkö
   'https://www.fillaritori.com/forum/55-cyclocrossgravel/',
   'https://www.fillaritori.com/forum/54-maantie/'
 ]
 
   const urls: string[] =  [];
-  
+
   for await (const item of subcategory_urls) {
     const i = await searchItems(item);
     console.log(i);
@@ -25,7 +29,7 @@ const HEADLESS = true;
   }
 
   console.log(urls)
-  await storeDb(urls)
+  await storeDb(urls, openInBrowser)
 })();
 
 

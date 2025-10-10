@@ -5,6 +5,9 @@ const dotenv_1 = require("dotenv");
 const utils_1 = require("./utils");
 // Set to false to run with browser window visible (for debugging)
 const HEADLESS = true;
+// Parse command line arguments
+const args = process.argv.slice(2);
+const openInBrowser = args.includes('--open');
 (async () => {
     (0, dotenv_1.config)();
     console.log("Starting browser...");
@@ -13,6 +16,6 @@ const HEADLESS = true;
     await page.goto('https://tavastiaklubi.fi/?show_all=1');
     // a.tiketti-list-item:nth-child(3)
     const urls = await page.$$eval('.tiketti-list-item', (elements) => elements.map((el) => el.href));
-    await (0, utils_1.storeDb)(urls);
+    await (0, utils_1.storeDb)(urls, openInBrowser);
     await browser.close();
 })();

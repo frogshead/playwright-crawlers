@@ -5,12 +5,15 @@ const dotenv_1 = require("dotenv");
 const utils_1 = require("./utils");
 // Set to false to run with browser window visible (for debugging)
 const HEADLESS = true;
+// Parse command line arguments
+const args = process.argv.slice(2);
+const openInBrowser = args.includes('--open');
 (async () => {
     (0, dotenv_1.config)();
     // console.log(process.env.TELEGRAM_API_KEY);
     // console.log(process.env.TELEGRAM_CHAT_ID);
     const subcategory_urls = [
-        'https://www.fillaritori.com/forum/85-maasto/', // sähkö 
+        'https://www.fillaritori.com/forum/85-maasto/', // sähkö
         'https://www.fillaritori.com/forum/55-cyclocrossgravel/',
         'https://www.fillaritori.com/forum/54-maantie/'
     ];
@@ -21,7 +24,7 @@ const HEADLESS = true;
         urls.push(...i);
     }
     console.log(urls);
-    await (0, utils_1.storeDb)(urls);
+    await (0, utils_1.storeDb)(urls, openInBrowser);
 })();
 async function searchItems(url) {
     console.log("Starting browser");

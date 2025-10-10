@@ -5,6 +5,10 @@ import { storeDb } from "./utils";
 // Set to false to run with browser window visible (for debugging)
 const HEADLESS = true;
 
+// Parse command line arguments
+const args = process.argv.slice(2);
+const openInBrowser = args.includes('--open');
+
 (async () => {
     config();
     console.log("Starting browser...");
@@ -14,6 +18,6 @@ const HEADLESS = true;
     // a.tiketti-list-item:nth-child(3)
     const urls = await page.$$eval('.project > a', (elements) => elements.map((el) => el.href));
     // console.log(urls)
-    await storeDb(urls);
+    await storeDb(urls, openInBrowser);
     await browser.close();
 })();

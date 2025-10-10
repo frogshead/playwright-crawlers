@@ -105,7 +105,32 @@ function getTelegramNotifier() {
     }
     return telegramNotifier;
 }
-async function storeDb(urls) {
+async function openUrlInBrowser(url) {
+    const { exec } = require('child_process');
+    const { promisify } = require('util');
+    const execAsync = promisify(exec);
+    try {
+        const platform = process.platform;
+        let command;
+        // Use platform-specific command to open URL in default browser
+        if (platform === 'darwin') {
+            command = `open "${url}"`;
+        }
+        else if (platform === 'win32') {
+            command = `start "" "${url}"`;
+        }
+        else {
+            // Linux and other Unix-like systems
+            command = `xdg-open "${url}"`;
+        }
+        await execAsync(command);
+        logger_1.logger.info("Opened URL in browser", { url });
+    }
+    catch (error) {
+        throw new Error(`Failed to open URL: ${error instanceof Error ? error.message : String(error)}`);
+    }
+}
+async function storeDb(urls, openInBrowser = false) {
     return new Promise((resolve, reject) => {
         // Store database in data directory for persistence in Docker
         const dbPath = process.env.NODE_ENV === 'production' ? './data/tori.db' : './tori.db';
@@ -145,6 +170,15 @@ async function storeDb(urls) {
                             }
                             catch (telegramError) {
                                 logger_1.logger.error("Failed to send Telegram notification", { url, error: telegramError instanceof Error ? telegramError.message : String(telegramError) });
+                            }
+                            // Open URL in browser if flag is set
+                            if (openInBrowser) {
+                                try {
+                                    await openUrlInBrowser(url);
+                                }
+                                catch (browserError) {
+                                    logger_1.logger.error("Failed to open URL in browser", { url, error: browserError instanceof Error ? browserError.message : String(browserError) });
+                                }
                             }
                         }
                         // Check if all URLs have been processed

@@ -8,6 +8,10 @@ import { startCrawlerMonitoring, completeCrawlerMonitoring, recordCrawlerMetrics
 const HEADLESS = true;
 const logger = createLogger('tori');
 
+// Parse command line arguments
+const args = process.argv.slice(2);
+const openInBrowser = args.includes('--open');
+
 (async () => {
   config();
   const crawlerName = 'tori';
@@ -49,8 +53,8 @@ const logger = createLogger('tori');
   }
 
   logger.crawlerComplete(urls.length, items.length);
-  await storeDb(urls);
-  
+  await storeDb(urls, openInBrowser);
+
   // Complete monitoring
   completeCrawlerMonitoring(crawlerName);
   clearInterval(systemMonitorInterval);
