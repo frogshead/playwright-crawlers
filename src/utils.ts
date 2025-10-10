@@ -114,7 +114,33 @@ function getTelegramNotifier(): TelegramNotifier {
   return telegramNotifier;
 }
 
-export async function storeDb(urls: string[]): Promise<void> {
+async function openUrlInBrowser(url: string): Promise<void> {
+  const { exec } = require('child_process');
+  const { promisify } = require('util');
+  const execAsync = promisify(exec);
+
+  try {
+    const platform = process.platform;
+    let command: string;
+
+    // Use platform-specific command to open URL in default browser
+    if (platform === 'darwin') {
+      command = `open "${url}"`;
+    } else if (platform === 'win32') {
+      command = `start "" "${url}"`;
+    } else {
+      // Linux and other Unix-like systems
+      command = `xdg-open "${url}"`;
+    }
+
+    await execAsync(command);
+    logger.info("Opened URL in browser", { url });
+  } catch (error) {
+    throw new Error(`Failed to open URL: ${error instanceof Error ? error.message : String(error)}`);
+  }
+}
+
+export async function storeDb(urls: string[], openInBrowser: boolean = false): Promise<void> {
   return new Promise((resolve, reject) => {
     // Store database in data directory for persistence in Docker
     const dbPath = process.env.NODE_ENV === 'production' ? './data/tori.db' : './tori.db';
@@ -148,18 +174,27 @@ export async function storeDb(urls: string[]): Promise<void> {
           urls.forEach((url) => {
             stmt.run(url, async (err) => {
               processedCount++;
-              
+
               if (err) {
                 logger.debug("Database error (likely duplicate)", { error: err.message });
                 logger.debug("URL already in database", { url });
               } else {
                 logger.info("Added new URL to database", { url });
-                
+
                 // Send notification for new URLs only using rate-limited system
                 try {
                   await getTelegramNotifier().sendMessage(url);
                 } catch (telegramError) {
                   logger.error("Failed to send Telegram notification", { url, error: telegramError instanceof Error ? telegramError.message : String(telegramError) });
+                }
+
+                // Open URL in browser if flag is set
+                if (openInBrowser) {
+                  try {
+                    await openUrlInBrowser(url);
+                  } catch (browserError) {
+                    logger.error("Failed to open URL in browser", { url, error: browserError instanceof Error ? browserError.message : String(browserError) });
+                  }
                 }
               }
 

@@ -8,6 +8,9 @@ const monitoring_1 = require("./monitoring");
 // Set to false to run with browser window visible (for debugging)
 const HEADLESS = true;
 const logger = (0, logger_1.createLogger)('tori');
+// Parse command line arguments
+const args = process.argv.slice(2);
+const openInBrowser = args.includes('--open');
 (async () => {
     (0, dotenv_1.config)();
     const crawlerName = 'tori';
@@ -43,7 +46,7 @@ const logger = (0, logger_1.createLogger)('tori');
         urls.push(...i);
     }
     logger.crawlerComplete(urls.length, items.length);
-    await (0, utils_1.storeDb)(urls);
+    await (0, utils_1.storeDb)(urls, openInBrowser);
     // Complete monitoring
     (0, monitoring_1.completeCrawlerMonitoring)(crawlerName);
     clearInterval(systemMonitorInterval);

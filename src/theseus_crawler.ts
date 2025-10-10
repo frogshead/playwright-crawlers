@@ -5,6 +5,10 @@ import { storeDb } from "./utils";
 // Set to false to run with browser window visible (for debugging)
 const HEADLESS = true;
 
+// Parse command line arguments
+const args = process.argv.slice(2);
+const openInBrowser = args.includes('--open');
+
 (async () => {
     config();
     const items = [
@@ -33,7 +37,7 @@ const HEADLESS = true;
         await page.goto(item);
         const urls = await page.$$eval('.thumbnail > a', (elements) => elements.map((el) => el.href));
         // console.log(urls)
-        await storeDb(urls);
+        await storeDb(urls, openInBrowser);
         await browser.close();
     }
 })();

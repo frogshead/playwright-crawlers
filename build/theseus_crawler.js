@@ -5,6 +5,9 @@ const dotenv_1 = require("dotenv");
 const utils_1 = require("./utils");
 // Set to false to run with browser window visible (for debugging)
 const HEADLESS = true;
+// Parse command line arguments
+const args = process.argv.slice(2);
+const openInBrowser = args.includes('--open');
 (async () => {
     (0, dotenv_1.config)();
     const items = [
@@ -27,7 +30,7 @@ const HEADLESS = true;
         await page.goto(item);
         const urls = await page.$$eval('.thumbnail > a', (elements) => elements.map((el) => el.href));
         // console.log(urls)
-        await (0, utils_1.storeDb)(urls);
+        await (0, utils_1.storeDb)(urls, openInBrowser);
         await browser.close();
     }
 })();

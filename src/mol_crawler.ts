@@ -5,6 +5,10 @@ import { storeDb } from './utils';
 // Set to false to run with browser window visible (for debugging)
 const HEADLESS = true;
 
+// Parse command line arguments
+const args = process.argv.slice(2);
+const openInBrowser = args.includes('--open');
+
 (async () => {
   config();
   
@@ -36,7 +40,7 @@ const HEADLESS = true;
 
   console.log(`Total job URLs found: ${jobUrls.length}`);
   if (jobUrls.length > 0) {
-    await storeDb(jobUrls);
+    await storeDb(jobUrls, openInBrowser);
   }
 })();
 
