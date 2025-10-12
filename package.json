@@ -20,6 +20,7 @@
     "build": "tsc",
     "start": "node build/tori_crawler.js",
     "start:mol": "node build/mol_crawler.js",
+    "start:duunitori": "node build/duunitori_crawler.js",
     "test": "playwright test"
   }
 }
