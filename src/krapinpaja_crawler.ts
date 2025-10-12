@@ -8,6 +8,7 @@ const HEADLESS = true;
 // Parse command line arguments
 const args = process.argv.slice(2);
 const openInBrowser = args.includes('--open');
+const noStore = args.includes('--no-store');
 
 (async () => {
     config();
@@ -18,6 +19,6 @@ const openInBrowser = args.includes('--open');
     // a.tiketti-list-item:nth-child(3)
     const urls = await page.$$eval('.project > a', (elements) => elements.map((el) => el.href));
     // console.log(urls)
-    await storeDb(urls, openInBrowser);
+    await storeDb(urls, openInBrowser, noStore);
     await browser.close();
 })();

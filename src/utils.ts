@@ -140,7 +140,32 @@ async function openUrlInBrowser(url: string): Promise<void> {
   }
 }
 
-export async function storeDb(urls: string[], openInBrowser: boolean = false): Promise<void> {
+export async function storeDb(urls: string[], openInBrowser: boolean = false, skipDatabase: boolean = false): Promise<void> {
+  // If skipDatabase is true, just open URLs in browser if requested
+  if (skipDatabase) {
+    logger.info("Skipping database storage (--no-store flag)", { urlCount: urls.length, openInBrowser });
+
+    if (openInBrowser) {
+      const asyncOperations: Promise<void>[] = [];
+
+      urls.forEach((url) => {
+        logger.info("Opening URL in browser (no-store mode)", { url });
+        const browserPromise = openUrlInBrowser(url).catch((browserError) => {
+          logger.error("Failed to open URL in browser", { url, error: browserError instanceof Error ? browserError.message : String(browserError) });
+        });
+        asyncOperations.push(browserPromise);
+      });
+
+      await Promise.all(asyncOperations);
+      logger.info("All URLs processed (no-store mode)", { urlCount: urls.length });
+    } else {
+      logger.info("No action taken (no-store without --open)", { urlCount: urls.length });
+    }
+
+    return Promise.resolve();
+  }
+
+  // Normal database storage mode
   return new Promise((resolve, reject) => {
     // Store database in data directory for persistence in Docker
     const dbPath = process.env.NODE_ENV === 'production' ? './data/tori.db' : './tori.db';
@@ -164,6 +189,7 @@ export async function storeDb(urls: string[], openInBrowser: boolean = false): P
           const stmt = db.prepare("INSERT INTO links VALUES (?)");
           let processedCount = 0;
           const totalCount = urls.length;
+          const asyncOperations: Promise<void>[] = [];
 
           if (totalCount === 0) {
             logger.info("No URLs to process");
@@ -172,7 +198,7 @@ export async function storeDb(urls: string[], openInBrowser: boolean = false): P
           }
 
           urls.forEach((url) => {
-            stmt.run(url, async (err) => {
+            stmt.run(url, (err) => {
               processedCount++;
 
               if (err) {
@@ -182,39 +208,40 @@ export async function storeDb(urls: string[], openInBrowser: boolean = false): P
                 logger.info("Added new URL to database", { url });
 
                 // Send notification for new URLs only using rate-limited system
-                try {
-                  await getTelegramNotifier().sendMessage(url);
-                } catch (telegramError) {
+                const telegramPromise = getTelegramNotifier().sendMessage(url).catch((telegramError) => {
                   logger.error("Failed to send Telegram notification", { url, error: telegramError instanceof Error ? telegramError.message : String(telegramError) });
-                }
+                });
+                asyncOperations.push(telegramPromise);
 
                 // Open URL in browser if flag is set
                 if (openInBrowser) {
-                  try {
-                    await openUrlInBrowser(url);
-                  } catch (browserError) {
+                  const browserPromise = openUrlInBrowser(url).catch((browserError) => {
                     logger.error("Failed to open URL in browser", { url, error: browserError instanceof Error ? browserError.message : String(browserError) });
-                  }
+                  });
+                  asyncOperations.push(browserPromise);
                 }
               }
 
               // Check if all URLs have been processed
               if (processedCount === totalCount) {
-                stmt.finalize((finalizeErr) => {
-                  if (finalizeErr) {
-                    logger.error("Error finalizing statement", { error: finalizeErr.message });
-                    reject(finalizeErr);
-                  } else {
-                    logger.info("Database operations completed", { processedCount: totalCount });
-                    db.close((closeErr) => {
-                      if (closeErr) {
-                        logger.error("Error closing database", { error: closeErr.message });
-                        reject(closeErr);
-                      } else {
-                        resolve();
-                      }
-                    });
-                  }
+                // Wait for all async operations to complete before finalizing
+                Promise.all(asyncOperations).finally(() => {
+                  stmt.finalize((finalizeErr) => {
+                    if (finalizeErr) {
+                      logger.error("Error finalizing statement", { error: finalizeErr.message });
+                      reject(finalizeErr);
+                    } else {
+                      logger.info("Database operations completed", { processedCount: totalCount });
+                      db.close((closeErr) => {
+                        if (closeErr) {
+                          logger.error("Error closing database", { error: closeErr.message });
+                          reject(closeErr);
+                        } else {
+                          resolve();
+                        }
+                      });
+                    }
+                  });
                 });
               }
             });

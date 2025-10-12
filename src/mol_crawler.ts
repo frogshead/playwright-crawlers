@@ -18,6 +18,7 @@ const logger = createLogger('mol');
 // Parse command line arguments
 const args = process.argv.slice(2);
 const openInBrowser = args.includes('--open');
+const noStore = args.includes('--no-store');
 
 (async () => {
   config();
@@ -60,7 +61,7 @@ const openInBrowser = args.includes('--open');
   logger.crawlerComplete(jobUrls.length, searchTerms.length);
 
   if (jobUrls.length > 0) {
-    await storeDb(jobUrls, openInBrowser);
+    await storeDb(jobUrls, openInBrowser, noStore);
   }
 
   // Complete monitoring

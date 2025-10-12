@@ -11,6 +11,7 @@ const logger = (0, logger_1.createLogger)('tavastia');
 // Parse command line arguments
 const args = process.argv.slice(2);
 const openInBrowser = args.includes('--open');
+const noStore = args.includes('--no-store');
 (async () => {
     (0, dotenv_1.config)();
     const crawlerName = 'tavastia';
@@ -28,7 +29,7 @@ const openInBrowser = args.includes('--open');
         const urls = await page.$$eval('.tiketti-list-item', (elements) => elements.map((el) => el.href));
         logger.info('Found event URLs', { count: urls.length });
         (0, monitoring_1.recordCrawlerMetrics)(crawlerName, 'events', urls.length);
-        await (0, utils_1.storeDb)(urls, openInBrowser);
+        await (0, utils_1.storeDb)(urls, openInBrowser, noStore);
         await browser.close();
         logger.browserOperation('close');
         logger.crawlerComplete(urls.length, 1);
