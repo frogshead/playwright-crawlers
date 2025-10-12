@@ -12,6 +12,8 @@ const logger = (0, logger_1.createLogger)('tori');
 const args = process.argv.slice(2);
 const openInBrowser = args.includes('--open');
 const noStore = args.includes('--no-store');
+// Extract search terms (non-flag arguments)
+const customSearchTerms = args.filter(arg => !arg.startsWith('--'));
 (async () => {
     (0, dotenv_1.config)();
     const crawlerName = 'tori';
@@ -19,7 +21,8 @@ const noStore = args.includes('--no-store');
     (0, monitoring_1.startCrawlerMonitoring)(crawlerName);
     const systemMonitorInterval = monitoring_1.monitor.startSystemMonitoring();
     logger.crawlerStart();
-    const items = [
+    // Default search terms
+    const defaultItems = [
         'yale doorman',
         'barcelona sohva',
         'dremel',
@@ -39,6 +42,14 @@ const noStore = args.includes('--no-store');
         'Herman Miller',
         'ruuvitag'
     ];
+    // Use custom search terms if provided, otherwise use defaults
+    const items = customSearchTerms.length > 0 ? customSearchTerms : defaultItems;
+    if (customSearchTerms.length > 0) {
+        logger.info('Using custom search terms', { terms: customSearchTerms, count: customSearchTerms.length });
+    }
+    else {
+        logger.info('Using default search terms', { count: defaultItems.length });
+    }
     const urls = [];
     for await (const item of items) {
         const i = await searchItems(item);
