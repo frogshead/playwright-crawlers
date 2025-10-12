@@ -60,6 +60,41 @@ npx ts-node src/tavastia_crawler.ts --no-store --open
 
 **Note:** When using `--no-store`, no Telegram notifications will be sent.
 
+#### Custom Search Terms
+
+The search-based crawlers (`tori_crawler`, `mol_crawler`, and `duunitori_crawler`) support custom search terms via command-line arguments. Any non-flag arguments are treated as search terms, overriding the hardcoded defaults.
+
+```bash
+# Single custom search term
+npx ts-node src/tori_crawler.ts "thinkpad"
+npx ts-node src/mol_crawler.ts "python developer"
+npx ts-node src/duunitori_crawler.ts "data scientist"
+
+# Multiple custom search terms
+npx ts-node src/tori_crawler.ts "arduino" "raspberry pi" "esp32"
+npx ts-node src/mol_crawler.ts "python" "golang" "rust" "typescript"
+npx ts-node src/duunitori_crawler.ts "react" "vue" "angular"
+
+# Combine with flags
+npx ts-node src/tori_crawler.ts --open "macbook"
+npx ts-node src/mol_crawler.ts --no-store --open "devops" "kubernetes"
+npx ts-node src/duunitori_crawler.ts --no-store "full stack developer"
+
+# With compiled version
+npm run build
+node build/tori_crawler.js "genelec"
+node build/mol_crawler.js --open "react developer" "vue developer"
+node build/duunitori_crawler.js --no-store --open "backend developer"
+```
+
+**Benefits:**
+- **Flexibility:** Search for any terms without modifying source code
+- **One-off searches:** Quick searches without permanent configuration changes
+- **Testing:** Test specific search terms easily
+- **Automation:** Integrate with scripts and automated workflows
+
+**Note:** If no custom search terms are provided, the crawlers use their default hardcoded search terms.
+
 ## Running with Docker
 
 ### Prerequisites
@@ -100,6 +135,16 @@ docker-compose run --rm crawler node build/mol_crawler.js --no-store
 
 # Preview and open URLs without storing
 docker-compose run --rm crawler node build/tori_crawler.js --no-store --open
+
+# With custom search terms
+docker-compose run --rm crawler node build/tori_crawler.js "thinkpad"
+docker-compose run --rm crawler node build/mol_crawler.js "python" "golang"
+docker-compose run --rm crawler node build/duunitori_crawler.js "data scientist"
+
+# Combine custom terms with flags
+docker-compose run --rm crawler node build/tori_crawler.js --no-store "macbook"
+docker-compose run --rm crawler node build/mol_crawler.js --open "devops engineer"
+docker-compose run --rm crawler node build/duunitori_crawler.js --no-store --open "full stack"
 ```
 
 **Note:** The `--open` flag may not work properly in Docker containers without proper display configuration.

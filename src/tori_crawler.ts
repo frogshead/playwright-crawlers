@@ -13,6 +13,9 @@ const args = process.argv.slice(2);
 const openInBrowser = args.includes('--open');
 const noStore = args.includes('--no-store');
 
+// Extract search terms (non-flag arguments)
+const customSearchTerms = args.filter(arg => !arg.startsWith('--'));
+
 (async () => {
   config();
   const crawlerName = 'tori';
@@ -23,7 +26,8 @@ const noStore = args.includes('--no-store');
 
   logger.crawlerStart();
 
-  const items = [
+  // Default search terms
+  const defaultItems = [
   'yale doorman',
   'barcelona sohva',
   'dremel',
@@ -41,7 +45,16 @@ const noStore = args.includes('--no-store');
   'sähkökitara',
   'wlan reititin',
   'Herman Miller',
-  'ruuvitag']
+  'ruuvitag'];
+
+  // Use custom search terms if provided, otherwise use defaults
+  const items = customSearchTerms.length > 0 ? customSearchTerms : defaultItems;
+
+  if (customSearchTerms.length > 0) {
+    logger.info('Using custom search terms', { terms: customSearchTerms, count: customSearchTerms.length });
+  } else {
+    logger.info('Using default search terms', { count: defaultItems.length });
+  }
 
 
   const urls: string[] =  [];
