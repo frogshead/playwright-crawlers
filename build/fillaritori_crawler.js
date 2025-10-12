@@ -11,6 +11,7 @@ const logger = (0, logger_1.createLogger)('fillaritori');
 // Parse command line arguments
 const args = process.argv.slice(2);
 const openInBrowser = args.includes('--open');
+const noStore = args.includes('--no-store');
 (async () => {
     (0, dotenv_1.config)();
     const crawlerName = 'fillaritori';
@@ -31,7 +32,7 @@ const openInBrowser = args.includes('--open');
         urls.push(...i);
     }
     logger.crawlerComplete(urls.length, subcategory_urls.length);
-    await (0, utils_1.storeDb)(urls, openInBrowser);
+    await (0, utils_1.storeDb)(urls, openInBrowser, noStore);
     // Complete monitoring
     (0, monitoring_1.completeCrawlerMonitoring)(crawlerName);
     clearInterval(systemMonitorInterval);

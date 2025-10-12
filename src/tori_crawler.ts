@@ -11,40 +11,41 @@ const logger = createLogger('tori');
 // Parse command line arguments
 const args = process.argv.slice(2);
 const openInBrowser = args.includes('--open');
+const noStore = args.includes('--no-store');
 
 (async () => {
   config();
   const crawlerName = 'tori';
-  
+
   // Start monitoring and system monitoring
   startCrawlerMonitoring(crawlerName);
   const systemMonitorInterval = monitor.startSystemMonitoring();
-  
+
   logger.crawlerStart();
-  
-  const items = [ 
+
+  const items = [
   'yale doorman',
   'barcelona sohva',
   'dremel',
   'ruuvi gateway',
-  'esp32', 
-  'oskilloskooppi', 
-  'rasberry pi', 
-  'arduino', 
-  'genelec', 
-  'pyörän kattoteline', 
-  'agilent', 
-  'rigol', 
-  'tektronix', 
-  'lecroy', 
+  'esp32',
+  'oskilloskooppi',
+  'rasberry pi',
+  'arduino',
+  'genelec',
+  'pyörän kattoteline',
+  'agilent',
+  'rigol',
+  'tektronix',
+  'lecroy',
   'sähkökitara',
   'wlan reititin',
-  'Herman Miller', 
+  'Herman Miller',
   'ruuvitag']
 
-  
+
   const urls: string[] =  [];
-  
+
   for await (const item of items) {
     const i = await searchItems(item);
     logger.searchComplete(item, i.length);
@@ -53,7 +54,7 @@ const openInBrowser = args.includes('--open');
   }
 
   logger.crawlerComplete(urls.length, items.length);
-  await storeDb(urls, openInBrowser);
+  await storeDb(urls, openInBrowser, noStore);
 
   // Complete monitoring
   completeCrawlerMonitoring(crawlerName);

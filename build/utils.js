@@ -130,7 +130,28 @@ async function openUrlInBrowser(url) {
         throw new Error(`Failed to open URL: ${error instanceof Error ? error.message : String(error)}`);
     }
 }
-async function storeDb(urls, openInBrowser = false) {
+async function storeDb(urls, openInBrowser = false, skipDatabase = false) {
+    // If skipDatabase is true, just open URLs in browser if requested
+    if (skipDatabase) {
+        logger_1.logger.info("Skipping database storage (--no-store flag)", { urlCount: urls.length, openInBrowser });
+        if (openInBrowser) {
+            const asyncOperations = [];
+            urls.forEach((url) => {
+                logger_1.logger.info("Opening URL in browser (no-store mode)", { url });
+                const browserPromise = openUrlInBrowser(url).catch((browserError) => {
+                    logger_1.logger.error("Failed to open URL in browser", { url, error: browserError instanceof Error ? browserError.message : String(browserError) });
+                });
+                asyncOperations.push(browserPromise);
+            });
+            await Promise.all(asyncOperations);
+            logger_1.logger.info("All URLs processed (no-store mode)", { urlCount: urls.length });
+        }
+        else {
+            logger_1.logger.info("No action taken (no-store without --open)", { urlCount: urls.length });
+        }
+        return Promise.resolve();
+    }
+    // Normal database storage mode
     return new Promise((resolve, reject) => {
         // Store database in data directory for persistence in Docker
         const dbPath = process.env.NODE_ENV === 'production' ? './data/tori.db' : './tori.db';
@@ -150,13 +171,14 @@ async function storeDb(urls, openInBrowser = false) {
                 const stmt = db.prepare("INSERT INTO links VALUES (?)");
                 let processedCount = 0;
                 const totalCount = urls.length;
+                const asyncOperations = [];
                 if (totalCount === 0) {
                     logger_1.logger.info("No URLs to process");
                     resolve();
                     return;
                 }
                 urls.forEach((url) => {
-                    stmt.run(url, async (err) => {
+                    stmt.run(url, (err) => {
                         processedCount++;
                         if (err) {
                             logger_1.logger.debug("Database error (likely duplicate)", { error: err.message });
@@ -165,41 +187,40 @@ async function storeDb(urls, openInBrowser = false) {
                         else {
                             logger_1.logger.info("Added new URL to database", { url });
                             // Send notification for new URLs only using rate-limited system
-                            try {
-                                await getTelegramNotifier().sendMessage(url);
-                            }
-                            catch (telegramError) {
+                            const telegramPromise = getTelegramNotifier().sendMessage(url).catch((telegramError) => {
                                 logger_1.logger.error("Failed to send Telegram notification", { url, error: telegramError instanceof Error ? telegramError.message : String(telegramError) });
-                            }
+                            });
+                            asyncOperations.push(telegramPromise);
                             // Open URL in browser if flag is set
                             if (openInBrowser) {
-                                try {
-                                    await openUrlInBrowser(url);
-                                }
-                                catch (browserError) {
+                                const browserPromise = openUrlInBrowser(url).catch((browserError) => {
                                     logger_1.logger.error("Failed to open URL in browser", { url, error: browserError instanceof Error ? browserError.message : String(browserError) });
-                                }
+                                });
+                                asyncOperations.push(browserPromise);
                             }
                         }
                         // Check if all URLs have been processed
                         if (processedCount === totalCount) {
-                            stmt.finalize((finalizeErr) => {
-                                if (finalizeErr) {
-                                    logger_1.logger.error("Error finalizing statement", { error: finalizeErr.message });
-                                    reject(finalizeErr);
-                                }
-                                else {
-                                    logger_1.logger.info("Database operations completed", { processedCount: totalCount });
-                                    db.close((closeErr) => {
-                                        if (closeErr) {
-                                            logger_1.logger.error("Error closing database", { error: closeErr.message });
-                                            reject(closeErr);
-                                        }
-                                        else {
-                                            resolve();
-                                        }
-                                    });
-                                }
+                            // Wait for all async operations to complete before finalizing
+                            Promise.all(asyncOperations).finally(() => {
+                                stmt.finalize((finalizeErr) => {
+                                    if (finalizeErr) {
+                                        logger_1.logger.error("Error finalizing statement", { error: finalizeErr.message });
+                                        reject(finalizeErr);
+                                    }
+                                    else {
+                                        logger_1.logger.info("Database operations completed", { processedCount: totalCount });
+                                        db.close((closeErr) => {
+                                            if (closeErr) {
+                                                logger_1.logger.error("Error closing database", { error: closeErr.message });
+                                                reject(closeErr);
+                                            }
+                                            else {
+                                                resolve();
+                                            }
+                                        });
+                                    }
+                                });
                             });
                         }
                     });
