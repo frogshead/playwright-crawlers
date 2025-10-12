@@ -4,7 +4,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a TypeScript-based web scraping project using Playwright for crawling various Finnish e-commerce and marketplace sites. The crawlers search for specific items and notify via Telegram when new listings are found. Each crawler targets a different website (tori.fi, tavastia.fi, krapinpaja.fi, etc.) and stores URLs in a SQLite database to avoid duplicate notifications.
+This is a TypeScript-based web scraping project using Playwright for crawling various Finnish e-commerce, marketplace, and job sites. The crawlers search for specific items and notify via Telegram when new listings are found. Each crawler targets a different website (tori.fi, duunitori.fi, tavastia.fi, krapinpaja.fi, etc.) and stores URLs in a SQLite database to avoid duplicate notifications.
+
+**Job Crawlers**:
+- `mol_crawler.ts`: Searches tyomarkkinatori.fi for job openings
+- `duunitori_crawler.ts`: Searches duunitori.fi for job openings in Uusimaa region
 
 ## Architecture
 
@@ -26,6 +30,7 @@ npx ts-node src/tori_crawler.ts
 npx ts-node src/tavastia_crawler.ts
 npx ts-node src/krapinpaja_crawler.ts
 npx ts-node src/mol_crawler.ts
+npx ts-node src/duunitori_crawler.ts
 # ... (similar for fillaritori, theseus crawlers)
 
 # Build TypeScript to JavaScript
@@ -34,6 +39,7 @@ npm run build
 # Run compiled version
 npm start
 npm run start:mol
+npm run start:duunitori
 
 # Run in headed mode (with browser window visible for debugging)
 # Edit the crawler file and change `const HEADLESS = true` to `const HEADLESS = false`
