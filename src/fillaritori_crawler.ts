@@ -1,9 +1,19 @@
 import { chromium, Page, selectors, Selectors } from 'playwright';
 import { config } from "dotenv";
 import { storeDb} from './utils';
+import { createLogger } from './logger';
+import {
+    startCrawlerMonitoring,
+    completeCrawlerMonitoring,
+    recordCrawlerMetrics,
+    recordCrawlerError,
+    monitor
+} from './monitoring';
 
 // Set to false to run with browser window visible (for debugging)
 const HEADLESS = true;
+
+const logger = createLogger('fillaritori');
 
 // Parse command line arguments
 const args = process.argv.slice(2);
@@ -11,42 +21,70 @@ const openInBrowser = args.includes('--open');
 
 (async () => {
   config();
-  // console.log(process.env.TELEGRAM_API_KEY);
-  // console.log(process.env.TELEGRAM_CHAT_ID);
+
+  const crawlerName = 'fillaritori';
+
+  // Start monitoring and system monitoring
+  startCrawlerMonitoring(crawlerName);
+  const systemMonitorInterval = monitor.startSystemMonitoring();
+
+  logger.crawlerStart();
 
   const subcategory_urls = [
-  'https://www.fillaritori.com/forum/85-maasto/', // sähkö
-  'https://www.fillaritori.com/forum/55-cyclocrossgravel/',
-  'https://www.fillaritori.com/forum/54-maantie/'
-]
+    'https://www.fillaritori.com/forum/85-maasto/', // sähkö
+    'https://www.fillaritori.com/forum/55-cyclocrossgravel/',
+    'https://www.fillaritori.com/forum/54-maantie/'
+  ];
 
-  const urls: string[] =  [];
+  const urls: string[] = [];
 
   for await (const item of subcategory_urls) {
     const i = await searchItems(item);
-    console.log(i);
-    urls.push(...i)
+    logger.info('Found URLs for category', { category: item, count: i.length });
+    recordCrawlerMetrics(crawlerName, item, i.length);
+    urls.push(...i);
   }
 
-  console.log(urls)
-  await storeDb(urls, openInBrowser)
+  logger.crawlerComplete(urls.length, subcategory_urls.length);
+
+  await storeDb(urls, openInBrowser);
+
+  // Complete monitoring
+  completeCrawlerMonitoring(crawlerName);
+  clearInterval(systemMonitorInterval);
 })();
 
 
 
 async function searchItems(url:string): Promise<string[]> {
-  console.log("Starting browser");
-  let date = Date.now().toString();
+  logger.browserOperation('launch', { headless: HEADLESS });
   const browser = await chromium.launch({headless: HEADLESS});
-  let page = await browser.newPage(); 
-  await page.goto(url);
-  await page.locator('button:has-text("HYVÄKSY")').click();
-  console.log('keksit hyväksytty');
-  // console.log('Found items: ',await page.$$eval('a[href^="https"]').);
-  const urls = await page.$$eval('a[href^="https://www.fillaritori.com/topic/"]', (elements) => 
-  elements.map((el)=> el.href),
-  )
-  await browser.close();
-  console.log("done and browser closed")
-  return urls 
+
+  try {
+    let page = await browser.newPage();
+    logger.debug('Navigating to URL', { url });
+    await page.goto(url);
+
+    await page.locator('button:has-text("HYVÄKSY")').click();
+    logger.debug('Cookie consent accepted');
+
+    const urls = await page.$$eval('a[href^="https://www.fillaritori.com/topic/"]', (elements) =>
+      elements.map((el)=> el.href)
+    );
+
+    logger.debug('Found topic URLs', { count: urls.length });
+
+    await browser.close();
+    logger.browserOperation('close');
+
+    return urls;
+  } catch (error) {
+    logger.error('Error during category search', {
+      url,
+      error: error instanceof Error ? error.message : error
+    });
+    recordCrawlerError('fillaritori', error instanceof Error ? error.message : String(error));
+    await browser.close();
+    return [];
+  }
 }
