@@ -3,13 +3,21 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const playwright_1 = require("playwright");
 const dotenv_1 = require("dotenv");
 const utils_1 = require("./utils");
+const logger_1 = require("./logger");
+const monitoring_1 = require("./monitoring");
 // Set to false to run with browser window visible (for debugging)
 const HEADLESS = true;
+const logger = (0, logger_1.createLogger)('mol');
 // Parse command line arguments
 const args = process.argv.slice(2);
 const openInBrowser = args.includes('--open');
 (async () => {
     (0, dotenv_1.config)();
+    const crawlerName = 'mol';
+    // Start monitoring and system monitoring
+    (0, monitoring_1.startCrawlerMonitoring)(crawlerName);
+    const systemMonitorInterval = monitoring_1.monitor.startSystemMonitoring();
+    logger.crawlerStart();
     const searchTerms = [
         'ohjelmistokehittäjä',
         'developer',
@@ -26,22 +34,26 @@ const openInBrowser = args.includes('--open');
     const jobUrls = [];
     for await (const term of searchTerms) {
         const urls = await searchJobs(term);
-        console.log(`Found ${urls.length} jobs for "${term}"`);
+        logger.searchComplete(term, urls.length);
+        (0, monitoring_1.recordCrawlerMetrics)(crawlerName, term, urls.length);
         jobUrls.push(...urls);
         // Add delay between searches to respect rate limits
         await new Promise(resolve => setTimeout(resolve, 3000));
     }
-    console.log(`Total job URLs found: ${jobUrls.length}`);
+    logger.crawlerComplete(jobUrls.length, searchTerms.length);
     if (jobUrls.length > 0) {
         await (0, utils_1.storeDb)(jobUrls, openInBrowser);
     }
+    // Complete monitoring
+    (0, monitoring_1.completeCrawlerMonitoring)(crawlerName);
+    clearInterval(systemMonitorInterval);
 })();
 async function searchJobs(searchTerm) {
-    console.log("Starting browser for job search");
+    logger.browserOperation('launch', { headless: HEADLESS });
     const browser = await playwright_1.chromium.launch({ headless: HEADLESS });
     const page = await browser.newPage();
     try {
-        console.log(`Searching for jobs: ${searchTerm}`);
+        logger.searchStart(searchTerm);
         // Navigate directly to search results URL with query parameter
         const searchUrl = `https://tyomarkkinatori.fi/henkiloasiakkaat/avoimet-tyopaikat/?ae=NOW&f=NOW&p=0&ps=30&q=${encodeURIComponent(searchTerm)}&r=01`;
         await page.goto(searchUrl, { timeout: 30000 });
@@ -53,7 +65,7 @@ async function searchJobs(searchTerm) {
             await page.waitForTimeout(1000);
         }
         catch (error) {
-            console.log("Cookie consent handled or not needed");
+            logger.debug("Cookie consent handled or not needed");
         }
         // Wait for search results to load
         await page.waitForTimeout(8000);
@@ -61,13 +73,13 @@ async function searchJobs(searchTerm) {
         const tmtSearchResults = await page.$('.tmt-haku-search-results-list');
         const switchableResults = await page.$('.SwitchableLayoutSearchResultsList');
         if (tmtSearchResults) {
-            console.log('Found tmt-haku-search-results-list container');
+            logger.debug('Found tmt-haku-search-results-list container');
         }
         else if (switchableResults) {
-            console.log('Found SwitchableLayoutSearchResultsList container');
+            logger.debug('Found SwitchableLayoutSearchResultsList container');
         }
         else {
-            console.log('Neither search results container found, trying alternative selectors');
+            logger.debug('Neither search results container found, trying alternative selectors');
         }
         // Extract job listing URLs from the search results page
         let jobUrls = [];
@@ -95,7 +107,7 @@ async function searchJobs(searchTerm) {
                     );
                     if (links.length > 0) {
                         jobUrls = [...jobUrls, ...links];
-                        console.log(`Found ${links.length} job links using selector: ${selector}`);
+                        logger.debug(`Found job links using selector`, { selector, count: links.length });
                         break; // Stop after finding results with first working selector
                     }
                 }
@@ -108,7 +120,7 @@ async function searchJobs(searchTerm) {
             // If no specific job links found, try to extract any links that might be job postings
             if (jobUrls.length === 0) {
                 try {
-                    console.log("No job-specific links found, trying broader search...");
+                    logger.debug("No job-specific links found, trying broader search");
                     const allLinks = await page.$$eval('a', (elements) => elements.map((el) => ({
                         href: el.href,
                         text: el.textContent?.toLowerCase().trim() || '',
@@ -123,22 +135,29 @@ async function searchJobs(searchTerm) {
                         .map(link => link.href)
                         .slice(0, 15));
                     jobUrls = allLinks;
-                    console.log(`Found ${allLinks.length} potential job-related links`);
+                    logger.debug(`Found potential job-related links`, { count: allLinks.length });
                 }
                 catch (e) {
-                    console.log("Could not extract any links");
+                    logger.warn("Could not extract any links");
                 }
             }
         }
         catch (error) {
-            console.log("Error extracting job URLs:", error instanceof Error ? error.message : error);
+            logger.error("Error extracting job URLs", {
+                error: error instanceof Error ? error.message : error
+            });
         }
-        console.log(`Total unique job URLs found for "${searchTerm}": ${jobUrls.length}`);
+        logger.debug(`Total unique job URLs found`, { searchTerm, count: jobUrls.length });
         await browser.close();
+        logger.browserOperation('close');
         return jobUrls;
     }
     catch (error) {
-        console.log(`Error searching for ${searchTerm}:`, error instanceof Error ? error.message : error);
+        logger.error(`Error searching for jobs`, {
+            searchTerm,
+            error: error instanceof Error ? error.message : error
+        });
+        (0, monitoring_1.recordCrawlerError)('mol', error instanceof Error ? error.message : String(error));
         await browser.close();
         return [];
     }
