@@ -88,24 +88,26 @@ async function searchItems(items) {
         }
         // Wait for content to load
         await page.waitForTimeout(5000);
-        // Extract all links that look like tori listings - try multiple patterns
+        // Extract all links that look like tori listings - updated pattern for new website structure
         let urls = [];
         try {
-            urls = await page.$$eval('a[href*="/vi/"]', (elements) => elements.map((el) => el.href)
-                .filter((href) => href && href.includes('tori.fi/vi/'))
+            urls = await page.$$eval('a[href*="/recommerce/forsale/item/"]', (elements) => elements.map((el) => el.href)
+                .filter((href) => href && href.includes('tori.fi/recommerce/forsale/item/'))
                 .slice(0, 10) // Limit to first 10 results
             );
         }
         catch (error) {
-            logger.debug("No /vi/ links found, trying alternative patterns");
-            // Try other link patterns
+            logger.debug("No /recommerce/forsale/item/ links found, trying alternative patterns");
+            // Try fallback pattern
             try {
-                urls = await page.$$eval('a[href*="tori.fi"]', (elements) => elements.map((el) => el.href)
-                    .filter((href) => href && href.includes('tori.fi') && href.includes('/'))
+                urls = await page.$$eval('a[href]', (elements) => elements.map((el) => el.href)
+                    .filter((href) => href &&
+                    href.includes('tori.fi') &&
+                    (href.includes('/recommerce/forsale/item/') || href.match(/\/\d+$/)))
                     .slice(0, 10));
             }
             catch (e) {
-                logger.warn("No tori.fi links found using any pattern");
+                logger.warn("No tori.fi listing links found using any pattern");
             }
         }
         logger.debug(`Found URLs for search term`, { searchTerm: items, count: urls.length });

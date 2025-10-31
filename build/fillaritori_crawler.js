@@ -20,7 +20,7 @@ const noStore = args.includes('--no-store');
     const systemMonitorInterval = monitoring_1.monitor.startSystemMonitoring();
     logger.crawlerStart();
     const subcategory_urls = [
-        'https://www.fillaritori.com/forum/85-maasto/', // sähkö
+        'https://www.fillaritori.com/forum/85-maasto/',
         'https://www.fillaritori.com/forum/55-cyclocrossgravel/',
         'https://www.fillaritori.com/forum/54-maantie/'
     ];

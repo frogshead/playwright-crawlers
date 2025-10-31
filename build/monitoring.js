@@ -1,10 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.monitor = void 0;
-exports.startCrawlerMonitoring = startCrawlerMonitoring;
-exports.completeCrawlerMonitoring = completeCrawlerMonitoring;
-exports.recordCrawlerMetrics = recordCrawlerMetrics;
-exports.recordCrawlerError = recordCrawlerError;
+exports.recordCrawlerError = exports.recordCrawlerMetrics = exports.completeCrawlerMonitoring = exports.startCrawlerMonitoring = exports.monitor = void 0;
 const logger_1 = require("./logger");
 class CrawlerMonitor {
     constructor() {
@@ -157,15 +153,19 @@ exports.monitor = new CrawlerMonitor();
 function startCrawlerMonitoring(crawlerName) {
     exports.monitor.startCrawler(crawlerName);
 }
+exports.startCrawlerMonitoring = startCrawlerMonitoring;
 function completeCrawlerMonitoring(crawlerName) {
     exports.monitor.completeCrawler(crawlerName);
 }
+exports.completeCrawlerMonitoring = completeCrawlerMonitoring;
 function recordCrawlerMetrics(crawlerName, searchTerm, urlsFound, newUrls) {
     exports.monitor.recordSearchComplete(crawlerName, searchTerm, urlsFound);
     if (newUrls !== undefined) {
         exports.monitor.recordNewUrls(crawlerName, newUrls);
     }
 }
+exports.recordCrawlerMetrics = recordCrawlerMetrics;
 function recordCrawlerError(crawlerName, error) {
     exports.monitor.recordError(crawlerName, error);
 }
+exports.recordCrawlerError = recordCrawlerError;

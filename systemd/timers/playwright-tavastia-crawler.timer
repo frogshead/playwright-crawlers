@@ -8,6 +8,8 @@ Requires=playwright-crawler@tavastia.service
 OnCalendar=*:30:00
 Persistent=true
 RandomizedDelaySec=60
+# Explicitly specify which service to trigger
+Unit=playwright-crawler@tavastia.service
 
 [Install]
 WantedBy=timers.target

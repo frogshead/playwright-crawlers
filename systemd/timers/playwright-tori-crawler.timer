@@ -10,6 +10,8 @@ OnCalendar=*:00:00
 Persistent=true
 # Add some randomization to prevent all crawlers from starting simultaneously
 RandomizedDelaySec=60
+# Explicitly specify which service to trigger
+Unit=playwright-crawler@tori.service
 
 [Install]
 WantedBy=timers.target

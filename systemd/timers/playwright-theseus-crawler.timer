@@ -8,6 +8,8 @@ Requires=playwright-crawler@theseus.service
 OnCalendar=*:50:00
 Persistent=true
 RandomizedDelaySec=60
+# Explicitly specify which service to trigger
+Unit=playwright-crawler@theseus.service
 
 [Install]
 WantedBy=timers.target

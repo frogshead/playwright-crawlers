@@ -8,6 +8,8 @@ Requires=playwright-crawler@krapinpaja.service
 OnCalendar=*:40:00
 Persistent=true
 RandomizedDelaySec=60
+# Explicitly specify which service to trigger
+Unit=playwright-crawler@krapinpaja.service
 
 [Install]
 WantedBy=timers.target

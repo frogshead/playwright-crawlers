@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.storeDb = storeDb;
+exports.storeDb = void 0;
 const sqlite3_1 = require("sqlite3");
 const logger_1 = require("./logger");
 function sleep(ms) {
@@ -229,3 +229,4 @@ async function storeDb(urls, openInBrowser = false, skipDatabase = false) {
         });
     });
 }
+exports.storeDb = storeDb;
