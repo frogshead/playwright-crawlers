@@ -46,19 +46,25 @@ systemd/
 For user-level systemd services (no root required):
 
 ```bash
-# 1. Copy service and timer files to user systemd directory
+# 1. Set up environment configuration
+sudo mkdir -p /opt/playwright-crawlers
+sudo cp systemd/config/production.env.template /opt/playwright-crawlers/.env
+sudo nano /opt/playwright-crawlers/.env  # Edit with your credentials
+sudo chmod 600 /opt/playwright-crawlers/.env
+
+# 2. Copy service and timer files to user systemd directory
 mkdir -p ~/.config/systemd/user
 cp systemd/services/playwright-*.service ~/.config/systemd/user/
 cp systemd/timers/playwright-*.timer ~/.config/systemd/user/
 
-# 2. Reload systemd
+# 3. Reload systemd
 systemctl --user daemon-reload
 
-# 3. Enable and start specific crawlers
+# 4. Enable and start specific crawlers
 systemctl --user enable --now playwright-tori.timer
 systemctl --user enable --now playwright-duunitori.timer
 
-# 4. Check status
+# 5. Check status
 systemctl --user list-timers 'playwright-*'
 ```
 
@@ -124,11 +130,18 @@ systemctl --user stop 'playwright-*.timer'
 
 ## Configuration
 
-Each service file contains environment variables:
-- `TELEGRAM_BOT_TOKEN` - Your Telegram bot token
+All service files load environment variables from `/opt/playwright-crawlers/.env` using `EnvironmentFile`.
+
+**Required environment variables:**
+- `TELEGRAM_API_KEY` - Your Telegram bot token (from @BotFather)
 - `TELEGRAM_CHAT_ID` - Your Telegram chat ID
 
-**Important**: Update these values in the service files before enabling them, or use environment file for production setup.
+**Setup steps:**
+1. Copy the template: `cp systemd/config/production.env.template /opt/playwright-crawlers/.env`
+2. Edit the file: `nano /opt/playwright-crawlers/.env`
+3. Set proper permissions: `chmod 600 /opt/playwright-crawlers/.env`
+
+**Note:** The variable name is `TELEGRAM_API_KEY`, not `TELEGRAM_BOT_TOKEN`. This matches the application's internal configuration.
 
 ## Troubleshooting
 
