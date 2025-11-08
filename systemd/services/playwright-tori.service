@@ -1,0 +1,12 @@
+[Unit]
+Description=Playwright Crawler - Tori.fi marketplace
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/npx ts-node src/tori_crawler.ts
+WorkingDirectory=/home/mikko/github/playwright-crawlers
+Environment=TELEGRAM_BOT_TOKEN=1014734973:AAGG0QEEzBm4iV84VQG7hRO_bBYyzpHGkq4
+Environment=TELEGRAM_CHAT_ID=1068475610
+
+[Install]
+WantedBy=default.target

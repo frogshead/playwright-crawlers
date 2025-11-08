@@ -1,0 +1,13 @@
+[Unit]
+Description=Timer for Playwright Theseus.fi crawler
+RefuseManualStart=no
+RefuseManualStop=no
+
+[Timer]
+Persistent=true
+OnBootSec=120
+OnUnitActiveSec=600
+Unit=playwright-theseus.service
+
+[Install]
+WantedBy=timers.target

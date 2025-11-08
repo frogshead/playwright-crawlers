@@ -1,7 +1,7 @@
 #!/bin/bash
 # Playwright Crawlers Management Script
 
-CRAWLERS=("tori" "mol" "fillaritori" "tavastia" "krapinpaja" "theseus")
+CRAWLERS=("tori" "mol" "fillaritori" "duunitori" "tavastia" "krapinpaja" "theseus")
 CONTAINER_REGISTRY="ghcr.io/frogshead/playwright-crawlers"
 
 show_usage() {
@@ -32,9 +32,9 @@ show_status() {
     
     echo "📊 Timer Status:"
     for crawler in "${CRAWLERS[@]}"; do
-        status=$(systemctl is-active "playwright-$crawler-crawler.timer" 2>/dev/null || echo "inactive")
-        enabled=$(systemctl is-enabled "playwright-$crawler-crawler.timer" 2>/dev/null || echo "disabled")
-        
+        status=$(systemctl is-active "playwright-$crawler.timer" 2>/dev/null || echo "inactive")
+        enabled=$(systemctl is-enabled "playwright-$crawler.timer" 2>/dev/null || echo "disabled")
+
         if [[ "$status" == "active" ]]; then
             echo "  ✅ $crawler: $status ($enabled)"
         else
@@ -55,7 +55,7 @@ show_status() {
     
     echo ""
     echo "⏱️  Next Scheduled Runs:"
-    systemctl list-timers 'playwright-*-crawler.timer' --no-pager 2>/dev/null || echo "  No timers found"
+    systemctl list-timers 'playwright-*.timer' --no-pager 2>/dev/null || echo "  No timers found"
     
     echo ""
     echo "🐳 Docker Image:"
@@ -68,9 +68,9 @@ show_status() {
 
 start_crawlers() {
     echo "▶️  Starting all crawler timers..."
-    
+
     for crawler in "${CRAWLERS[@]}"; do
-        if systemctl start "playwright-$crawler-crawler.timer"; then
+        if systemctl start "playwright-$crawler.timer"; then
             echo "  ✅ Started $crawler crawler timer"
         else
             echo "  ❌ Failed to start $crawler crawler timer"
@@ -88,12 +88,12 @@ start_crawlers() {
 
 stop_crawlers() {
     echo "⏹️  Stopping all crawler timers..."
-    
+
     # Stop target first
     systemctl stop playwright-crawlers.target
-    
+
     for crawler in "${CRAWLERS[@]}"; do
-        if systemctl stop "playwright-$crawler-crawler.timer"; then
+        if systemctl stop "playwright-$crawler.timer"; then
             echo "  ✅ Stopped $crawler crawler timer"
         else
             echo "  ❌ Failed to stop $crawler crawler timer"
@@ -114,9 +114,9 @@ show_logs() {
     echo "📋 Recent Crawler Logs (last 50 lines)"
     echo "======================================"
     echo ""
-    
+
     # Show recent logs from all crawler services
-    journalctl -u 'playwright-*-crawler.service' -n 50 --no-pager -o short-iso
+    journalctl -u 'playwright-*.service' -n 50 --no-pager -o short-iso
     
     echo ""
     echo "💡 To follow live logs, use:"
@@ -151,13 +151,13 @@ test_crawler() {
     fi
     
     echo "🧪 Testing $crawler crawler..."
-    
-    if systemctl start "playwright-crawler@$crawler.service"; then
+
+    if systemctl start "playwright-$crawler.service"; then
         echo "✅ Test crawler started successfully"
-        echo "📋 Follow logs with: journalctl -u playwright-crawler@$crawler.service -f"
+        echo "📋 Follow logs with: journalctl -u playwright-$crawler.service -f"
     else
         echo "❌ Test crawler failed to start"
-        echo "📋 Check logs with: journalctl -u playwright-crawler@$crawler.service -n 20"
+        echo "📋 Check logs with: journalctl -u playwright-$crawler.service -n 20"
         return 1
     fi
 }

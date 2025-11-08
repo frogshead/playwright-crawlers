@@ -53,9 +53,9 @@ echo "✅ Directory structure created at $INSTALL_DIR"
 
 # 3. Copy systemd service files
 echo "⚙️  Installing systemd service files..."
-cp "$(dirname "$0")/../services/playwright-crawler@.service" /etc/systemd/system/
+cp "$(dirname "$0")/../services/playwright-"*.service /etc/systemd/system/
 cp "$(dirname "$0")/../services/playwright-crawlers.target" /etc/systemd/system/
-cp "$(dirname "$0")/../timers/"*.timer /etc/systemd/system/
+cp "$(dirname "$0")/../timers/playwright-"*.timer /etc/systemd/system/
 echo "✅ Systemd files installed"
 
 # 4. Create environment file template if it doesn't exist
@@ -92,9 +92,9 @@ echo "🔄 Reloading systemd configuration..."
 systemctl daemon-reload
 
 echo "🔧 Enabling crawler timers..."
-CRAWLERS=("tori" "mol" "fillaritori" "tavastia" "krapinpaja" "theseus")
+CRAWLERS=("tori" "mol" "fillaritori" "duunitori" "tavastia" "krapinpaja" "theseus")
 for crawler in "${CRAWLERS[@]}"; do
-    systemctl enable "playwright-$crawler-crawler.timer"
+    systemctl enable "playwright-$crawler.timer"
     echo "  ✅ Enabled $crawler crawler timer"
 done
 
@@ -103,17 +103,17 @@ echo "✅ Enabled crawlers target"
 
 # 7. Test single crawler
 echo "🧪 Testing single crawler execution..."
-if systemctl start "playwright-crawler@tori.service"; then
+if systemctl start "playwright-tori.service"; then
     echo "✅ Test crawler execution successful"
 else
     echo "❌ Test crawler execution failed. Check logs with:"
-    echo "   journalctl -u playwright-crawler@tori.service -f"
+    echo "   journalctl -u playwright-tori.service -f"
 fi
 
 # 8. Start timers
 echo "▶️  Starting crawler timers..."
 for crawler in "${CRAWLERS[@]}"; do
-    systemctl start "playwright-$crawler-crawler.timer"
+    systemctl start "playwright-$crawler.timer"
 done
 systemctl start playwright-crawlers.target
 echo "✅ All crawler timers started"
@@ -136,12 +136,13 @@ echo "3. Check status: playwright-crawlers status"
 echo "4. View logs: playwright-crawlers logs"
 echo ""
 echo "Crawler Schedule:"
-echo "  📊 Tori:        Every hour at :00"
-echo "  💼 MOL:         Every hour at :10"  
-echo "  🛒 Fillaritori: Every hour at :20"
-echo "  🎵 Tavastia:    Every hour at :30"
-echo "  🔧 Krapinpaja:  Every hour at :40"
-echo "  📚 Theseus:     Every hour at :50"
+echo "  📊 Tori:        Every 10 minutes (2 min after boot)"
+echo "  💼 MOL:         Every 10 minutes (2 min after boot)"
+echo "  🛒 Fillaritori: Every 10 minutes (2 min after boot)"
+echo "  💼 Duunitori:   Every 10 minutes (2 min after boot)"
+echo "  🎵 Tavastia:    Every 10 minutes (2 min after boot)"
+echo "  🔧 Krapinpaja:  Every 10 minutes (2 min after boot)"
+echo "  📚 Theseus:     Every 10 minutes (2 min after boot)"
 echo ""
 echo "Management commands:"
 echo "  playwright-crawlers status   # Show status of all crawlers"

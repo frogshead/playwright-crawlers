@@ -1,0 +1,13 @@
+[Unit]
+Description=Timer for Playwright Fillaritori.fi crawler
+RefuseManualStart=no
+RefuseManualStop=no
+
+[Timer]
+Persistent=true
+OnBootSec=120
+OnUnitActiveSec=600
+Unit=playwright-fillaritori.service
+
+[Install]
+WantedBy=timers.target
