@@ -36,7 +36,7 @@ const customSearchTerms = args.filter(arg => !arg.startsWith('--'));
   'esp32',
   'oskilloskooppi',
   'rasberry pi',
-  'arduino',
+  'garmin edge',
   'genelec',
   'pyörän kattoteline',
   'agilent',
@@ -44,7 +44,7 @@ const customSearchTerms = args.filter(arg => !arg.startsWith('--'));
   'tektronix',
   'lecroy',
   'sähkökitara',
-  'wlan reititin',
+  'usb äänikortti',
   'Herman Miller',
   'ruuvitag'];
 
