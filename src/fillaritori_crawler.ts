@@ -32,7 +32,7 @@ const noStore = args.includes('--no-store');
   logger.crawlerStart();
 
   const subcategory_urls = [
-    'https://www.fillaritori.com/forum/13-kiekot/?filterByState=8' // State ==  myydään
+    'https://www.fillaritori.com/forum/13-kiekot/?filterByState=8', // State ==  myydään
     'https://www.fillaritori.com/forum/55-cyclocrossgravel/?filterByState=8'
   ];
 
