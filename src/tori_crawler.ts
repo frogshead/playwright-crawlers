@@ -29,8 +29,7 @@ const customSearchTerms = args.filter(arg => !arg.startsWith('--'));
   // Default search terms
   const defaultItems = [
   'yale doorman',
-    'kobo',
-  'kindle',
+  'mac mini',
   'barcelona sohva',
   'dremel',
   'ruuvi gateway',
