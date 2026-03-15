@@ -43,6 +43,7 @@ const customSearchTerms = args.filter(arg => !arg.startsWith('--'));
   'rigol',
   'tektronix',
   'lecroy',
+  'garmin edge canyon',
   'sähkökitara',
   'usb äänikortti',
   'Herman Miller',
