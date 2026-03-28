@@ -84,7 +84,7 @@ async function searchItems(items:string): Promise<string[]> {
   
   try {
     // Navigate directly to search results URL with shorter timeout
-    const searchUrl = `https://www.tori.fi/koko_suomi?q=${encodeURIComponent(items)}`;
+    const searchUrl = `https://www.tori.fi/recommerce/forsale/search?q=${encodeURIComponent(items)}`;
     logger.searchStart(items);
     await page.goto(searchUrl, { timeout: 15000 });
     
