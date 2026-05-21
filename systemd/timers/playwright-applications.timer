@@ -1,0 +1,13 @@
+[Unit]
+Description=Daily timer for job application generation
+RefuseManualStart=no
+RefuseManualStop=no
+
+[Timer]
+# Once a day at 07:00 local time. Persistent catches a missed run after downtime.
+OnCalendar=*-*-* 07:00:00
+Persistent=true
+Unit=playwright-applications.service
+
+[Install]
+WantedBy=timers.target
