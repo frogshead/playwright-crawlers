@@ -105,4 +105,11 @@ dist
 
 
 build/index.js
+
+# Database files
 tori.db
+data/*.db
+data/*.db-*
+
+# Generated job applications (CV-derived personal content)
+data/resumes/

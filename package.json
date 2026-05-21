@@ -21,6 +21,8 @@
     "start": "node build/tori_crawler.js",
     "start:mol": "node build/mol_crawler.js",
     "start:duunitori": "node build/duunitori_crawler.js",
+    "reactions": "node build/reaction_listener.js",
+    "resumes": "node build/resume_generator.js",
     "test": "playwright test"
   }
 }
