@@ -30,6 +30,7 @@ const customSearchTerms = args.filter(arg => !arg.startsWith('--'));
   const defaultItems = [
   'yale doorman',
   'garmin forerunner',
+  'Arne Jacobsen',
   'mac mini',
   'barcelona sohva',
   'dremel',
