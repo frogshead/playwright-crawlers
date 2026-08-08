@@ -1,0 +1,16 @@
+[Unit]
+Description=Playwright - Generate job applications for flagged Duunitori posts
+
+[Service]
+Type=oneshot
+WorkingDirectory=/home/mikko/ohjelmointi/github/playwright-crawlers
+EnvironmentFile=/opt/playwright-crawlers/.env
+Environment=NODE_ENV=production
+# Run sequentially: first drain Telegram replies/reactions to flag posts,
+# then generate applications for the flagged job postings. Type=oneshot runs
+# multiple ExecStart lines in order and waits for each to finish.
+ExecStart=/usr/bin/npx ts-node src/reaction_listener.ts
+ExecStart=/usr/bin/npx ts-node src/resume_generator.ts
+
+[Install]
+WantedBy=default.target
